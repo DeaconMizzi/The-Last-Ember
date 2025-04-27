@@ -32,7 +32,7 @@ public class PlayerCombat : MonoBehaviour
             if (enemy.CompareTag("Enemy"))
             {
                 Debug.Log("Hit enemy: " + enemy.name);
-                // Later: enemy.GetComponent<EnemyHealth>().TakeDamage(attackDamage);
+                enemy.GetComponent<EnemyHealth>().TakeDamage(attackDamage);
             }
         }
     }
