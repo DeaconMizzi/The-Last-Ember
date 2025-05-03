@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d9f4527ee3473439cd9cae7a4f2ed9, type: 3}
   m_Name: ElderDialogue
   m_EditorClassIdentifier: 
-  npcName: 
-  npcPortrait: {fileID: 0}
-  dialogueLines: []
+  npcName: Elder
+  npcPortrait: {fileID: 21300000, guid: 1c783846440b16644b3ee6501fe5e363, type: 3}
+  dialogueLines:
+  - Welcome! Are you keeping the Flame safe?
+  - You should head off and save the other towns!
+  autoProgressLines: 0100
+  autoProgressDelay: 1.5
   typingSpeed: 0
   npcSound: {fileID: 0}
   voicePitch: 1
-  autoProgressLines: 
-  autoProgressDelay: 1.5
