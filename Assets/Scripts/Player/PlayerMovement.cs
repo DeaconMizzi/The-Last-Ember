@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
+    public bool canMove = true; // ← ADD THIS
 
     private Rigidbody2D rb;
     private Animator anim;
@@ -22,6 +23,12 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (!canMove)
+        {
+            anim.SetBool("isMoving", false);
+            return;
+        }
+
         moveInput.x = Input.GetAxisRaw("Horizontal");
         moveInput.y = Input.GetAxisRaw("Vertical");
         moveVelocity = moveInput.normalized * moveSpeed;
@@ -34,7 +41,6 @@ public class PlayerMovement : MonoBehaviour
             lastMoveY = moveInput.y;
         }
 
-        // Animator Parameters
         anim.SetBool("isMoving", isMoving);
         anim.SetFloat("moveX", isMoving ? moveInput.x : lastMoveX);
         anim.SetFloat("moveY", isMoving ? moveInput.y : lastMoveY);
@@ -42,6 +48,9 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb.MovePosition(rb.position + moveVelocity * Time.fixedDeltaTime);
+        if (canMove)
+        {
+            rb.MovePosition(rb.position + moveVelocity * Time.fixedDeltaTime);
+        }
     }
 }
