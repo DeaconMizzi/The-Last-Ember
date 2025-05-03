@@ -2,17 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NPCDialogue : MonoBehaviour
+[CreateAssetMenu(fileName ="NewNPCDialogue", menuName ="NPC Dialogue")]
+public class NPCDialogue : ScriptableObject
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public string npcName;
+    public Sprite npcPortrait;
+    public string[] dialogueLines;
+    public bool[] autoProgressLines;
+    public float autoProgressDelay = 1.5f;
+    public float typingSpeed = 0.0f;
+    public AudioClip npcSound;
+    public float voicePitch = 1f;
+   
+    
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
