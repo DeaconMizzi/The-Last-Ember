@@ -10,6 +10,5 @@ SpriteAtlasAsset:
   serializedVersion: 2
   m_MasterAtlas: {fileID: 0}
   m_ImporterData:
-    packables:
-    - {fileID: 2800000, guid: 8f3aba4ad8277794c802f524b1b80c96, type: 3}
+    packables: []
   m_IsVariant: 0
