@@ -34,6 +34,8 @@ public class MapTransition : MonoBehaviour
             {
                 areaNamePopup.ShowAreaName(areaName);
             }
+
+            MapController_Manual.Instance?.HighlightArea(mapBoundry.name);
         }
     }
 
