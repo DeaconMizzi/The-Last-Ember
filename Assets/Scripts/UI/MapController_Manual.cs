@@ -15,6 +15,28 @@ public class MapController_Manual : MonoBehaviour
 
    public RectTransform playerIconTransform;
 
+   private HashSet<string> discoveredAreas = new HashSet<string>();
+   public string startingAreaName = "Houses";
+
+
+    private void Start()
+    {
+        // Refresh list in case any were added dynamically
+        mapImages = mapParent.GetComponentsInChildren<Image>().ToList();
+
+        // Hide all initially
+        foreach (Image area in mapImages)
+        {
+            area.enabled = false;
+        }
+
+        // Hide the player icon until an area is shown
+        playerIconTransform.gameObject.SetActive(false);
+
+        // Immediately highlight the starting area
+        HighlightArea(startingAreaName);
+    }
+
    private void Awake()
    {
     if (Instance != null && Instance != this)
@@ -29,22 +51,34 @@ public class MapController_Manual : MonoBehaviour
     mapImages = mapParent.GetComponentsInChildren<Image>().ToList();
    }
 
-   public void HighlightArea(string areaName)
+  public void HighlightArea(string areaName)
    {
-    foreach(Image area in mapImages)
-    {
-        area.color = dimmedColour;
-    }
-    Image currentArea = mapImages.Find(x => x.name == areaName);
+    mapImages = mapParent.GetComponentsInChildren<Image>().ToList();
+    discoveredAreas.Add(areaName);
 
+    foreach (Image area in mapImages)
+    {
+        if (discoveredAreas.Contains(area.name))
+        {
+            area.enabled = true;
+            area.color = dimmedColour;
+        }
+        else
+        {
+            area.enabled = false;
+        }
+    }
+
+    Image currentArea = mapImages.Find(x => x.name == areaName);
     if (currentArea != null)
     {
         currentArea.color = highlightColour;
         playerIconTransform.position = currentArea.GetComponent<RectTransform>().position;
+        playerIconTransform.gameObject.SetActive(true);
     }
     else
     {
-        Debug.LogWarning("Area not found" + areaName);
+        Debug.LogWarning("Area not found: " + areaName);
     }
    }
 

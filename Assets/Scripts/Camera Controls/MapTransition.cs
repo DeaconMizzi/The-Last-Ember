@@ -36,6 +36,7 @@ public class MapTransition : MonoBehaviour
             }
 
             MapController_Manual.Instance?.HighlightArea(mapBoundry.name);
+            MapController_Dynamic.Instance?.UpdateCurrentArea(mapBoundry.name);
         }
     }
 
