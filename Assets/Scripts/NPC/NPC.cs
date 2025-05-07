@@ -21,7 +21,7 @@ public class QuestData
 public class NPC : MonoBehaviour
 {
     public string npcName;
-    public List<DialogueLine> dialogue;
+    public DialogueNode startingNode;
     public QuestData quest;
 
     public bool questGiven = false;
