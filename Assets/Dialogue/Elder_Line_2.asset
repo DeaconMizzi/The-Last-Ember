@@ -14,15 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speakerName: Elder
   dialogueText: How are you feeling?
-  portrait: {fileID: 21300000, guid: 1c783846440b16644b3ee6501fe5e363, type: 3}
+  portrait: {fileID: 21300000, guid: 625834f778378b94a91b66ef4cddb550, type: 3}
   choices:
-  - choiceText: Amazing!
+  - choiceText: 1
     nextNode: {fileID: 0}
     consequenceID: 
-  - choiceText: Been better
+  - choiceText: 2
     nextNode: {fileID: 0}
     consequenceID: 
-  - choiceText: :(
+  - choiceText: 3
     nextNode: {fileID: 0}
     consequenceID: 
-  nextAutoNode: {fileID: 0}
+  - choiceText: 4
+    nextNode: {fileID: 0}
+    consequenceID: 
+  - choiceText: 5
+    nextNode: {fileID: 0}
+    consequenceID: 
+  nextAutoNode: {fileID: 11400000, guid: 989bf09523b6f8747827a44318b18177, type: 2}

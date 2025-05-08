@@ -29,12 +29,17 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        moveInput.x = Input.GetAxisRaw("Horizontal");
-        moveInput.y = Input.GetAxisRaw("Vertical");
-        moveVelocity = moveInput.normalized * moveSpeed;
+        if (!DialogueManager.DialogueIsOpen)
+        {
+            moveInput.x = Input.GetAxisRaw("Horizontal");
+            moveInput.y = Input.GetAxisRaw("Vertical");
+            moveVelocity = moveInput.normalized * moveSpeed;
 
+            
+        }
+        
         bool isMoving = moveInput.sqrMagnitude > 0.1f;
-
+        
         if (isMoving)
         {
             lastMoveX = moveInput.x;
