@@ -67,7 +67,7 @@ public class DialogueManager : MonoBehaviour
         selectedIndex = 0;
         scrollOffset = 0;
 
-        ClearChoices();
+        
         isWaitingForContinue = false;
 
         if (waitCoroutine != null)
