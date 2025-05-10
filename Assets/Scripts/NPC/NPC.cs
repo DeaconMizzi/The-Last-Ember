@@ -10,19 +10,17 @@ public class DialogueLine
     public Sprite portrait;
 }
 
-[System.Serializable]
-public class QuestData
-{
-    public string questID;
-    public string description;
-    public bool isComplete = false;
-}
-
 public class NPC : MonoBehaviour
 {
     public string npcName;
     public DialogueNode startingNode;
-    public QuestData quest;
+    public DialogueNode questAcceptedNode;
+    public DialogueNode questCompleteNode;
 
-    public bool questGiven = false;
+    // Reference to the actual quest
+    public QuestData quest = new QuestData();
+
+    // Controls post-quest behavior
+    public bool canTalkAfterQuest = false;
+    public DialogueNode postQuestNode;
 }

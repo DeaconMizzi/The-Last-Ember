@@ -13,25 +13,13 @@ MonoBehaviour:
   m_Name: Elder_Line_2
   m_EditorClassIdentifier: 
   speakerName: Elder
-  dialogueText: How are you feeling?
+  dialogueText: I need your help.
   portrait: {fileID: 21300000, guid: 1c783846440b16644b3ee6501fe5e363, type: 3}
   choices:
-  - choiceText: 1
+  - choiceText: Sure!
+    nextNode: {fileID: 11400000, guid: 13439df4e3e80d6428ea4689ad9362a3, type: 2}
+    consequenceID: GIVE_killorcs
+  - choiceText: Maybe next time...
     nextNode: {fileID: 0}
     consequenceID: 
-  - choiceText: 1
-    nextNode: {fileID: 0}
-    consequenceID: 
-  - choiceText: 1
-    nextNode: {fileID: 0}
-    consequenceID: 
-  - choiceText: 1
-    nextNode: {fileID: 0}
-    consequenceID: 
-  - choiceText: 1
-    nextNode: {fileID: 0}
-    consequenceID: 
-  - choiceText: 1
-    nextNode: {fileID: 0}
-    consequenceID: 
-  nextAutoNode: {fileID: 11400000, guid: 989bf09523b6f8747827a44318b18177, type: 2}
+  nextAutoNode: {fileID: 0}

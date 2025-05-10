@@ -5,11 +5,14 @@ using UnityEngine;
 public class PlayerCombat : MonoBehaviour
 {
     private Animator animator;
+    private float attackCooldownTimer = 0f;
+
 
     [Header("Attack Settings")]
     public float attackRange = 1f;
     public int attackDamage = 1;
-    
+    public float attackCooldown = 0.8f; // Adjust to match your animation length
+
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -17,10 +20,23 @@ public class PlayerCombat : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        // Cooldown countdown
+        if (attackCooldownTimer > 0f)
         {
-            animator.SetTrigger("Attack");
+            attackCooldownTimer -= Time.deltaTime;
         }
+
+        // Attack input
+        if (Input.GetKeyDown(KeyCode.Space) && attackCooldownTimer <= 0f)
+        {
+            Attack();
+        }
+    }
+
+    void Attack()
+    {
+        animator.SetTrigger("Attack");
+        attackCooldownTimer = attackCooldown;
     }
 
     public void DealDamage()
@@ -39,7 +55,6 @@ public class PlayerCombat : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        // Visualize the attack range in the editor
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }

@@ -13,14 +13,15 @@ public class DialogueManager : MonoBehaviour
     public TMP_Text speakerText;
     public TMP_Text dialogueText;
     public Image portraitImage;
-
     public GameObject choicePanel;
     public GameObject choiceSlotPrefab;
     public int visibleChoiceCount = 3;
+    public GameObject choicePanelBackground;
 
     private DialogueNode currentNode;
     private List<DialogueChoice> currentChoices = new List<DialogueChoice>();
     private List<GameObject> instantiatedSlots = new List<GameObject>();
+    public GameObject portraitBackground;
 
     private int selectedIndex = 0;
     private int scrollOffset = 0;
@@ -28,6 +29,8 @@ public class DialogueManager : MonoBehaviour
     private Coroutine waitCoroutine = null;
     public float typingSpeed = 0.03f;
     private Coroutine typingCoroutine = null;
+
+    private NPC currentNPC;
 
     private void Awake()
     {
@@ -37,37 +40,110 @@ public class DialogueManager : MonoBehaviour
 
     public void StartDialogue(NPC npc)
     {
-        if (npc.startingNode == null)
+        currentNPC = npc;
+
+        if (npc == null)
         {
-            Debug.LogWarning("NPC has no starting dialogue node assigned.");
+            Debug.LogWarning("No NPC passed to StartDialogue.");
             return;
         }
 
-        currentNode = npc.startingNode;
+        if (npc.quest != null && npc.quest.hasCompletedQuest && !npc.canTalkAfterQuest)
+        {
+            DialogueNode silentNode = CreateFallbackNode(npc.npcName, "They look busy and don’t respond.");
+            dialoguePanel.SetActive(true);
+            DisplayNode(silentNode);
+            return;
+        }
+
+        if (npc.quest != null)
+        {
+            if (npc.quest.questGiven && QuestManager.Instance.IsQuestComplete(npc.quest.questID))
+            {
+                if (npc.questCompleteNode != null)
+                {
+                    currentNode = npc.questCompleteNode;
+                }
+                else
+                {
+                    currentNode = CreateFallbackNode(npc.npcName, "They look busy and don’t respond.");
+                }
+
+                QuestManager.Instance.RemoveQuest(npc.quest.questID);
+                npc.quest.questGiven = false;
+                npc.quest.isComplete = false;
+                npc.quest.hasCompletedQuest = true;
+
+                FindObjectOfType<QuestLogUI>()?.UpdateQuestList();
+
+                dialoguePanel.SetActive(true);
+                DisplayNode(currentNode);
+                return;
+            }
+
+            if (npc.quest.questGiven)
+            {
+                if (npc.questAcceptedNode != null)
+                {
+                    currentNode = npc.questAcceptedNode;
+                }
+                else
+                {
+                    currentNode = CreateFallbackNode(npc.npcName, "They don’t seem like they want to talk right now.");
+                }
+            }
+            else
+            {
+                currentNode = npc.startingNode;
+            }
+        }
+        else
+        {
+            currentNode = npc.startingNode;
+        }
+
         dialoguePanel.SetActive(true);
         DisplayNode(currentNode);
     }
 
-    public void DisplayNode(DialogueNode node)
+   public void DisplayNode(DialogueNode node)
     {
         currentNode = node;
-        speakerText.text = node.speakerName;
+
+        bool isFallback = string.IsNullOrEmpty(node.speakerName) || node.speakerName == "Narration";
+        speakerText.text = isFallback ? "" : node.speakerName;
+
+        if (portraitImage != null)
+        {
+            if (isFallback)
+                portraitImage.enabled = false;
+            else
+            {
+                portraitImage.sprite = node.portrait;
+                portraitImage.enabled = node.portrait != null;
+            }
+        }
+
+        // ✅ Toggle portrait background
+        if (portraitBackground != null)
+        {
+            portraitBackground.SetActive(!isFallback);
+        }
+
+        if (choicePanelBackground != null)
+        {
+            bool hasChoices = node.choices != null && node.choices.Count > 0;
+            choicePanelBackground.SetActive(hasChoices);
+        }
 
         if (typingCoroutine != null)
             StopCoroutine(typingCoroutine);
         typingCoroutine = StartCoroutine(TypeText(node.dialogueText));
 
-        if (portraitImage != null)
-        {
-            portraitImage.sprite = node.portrait;
-            portraitImage.enabled = node.portrait != null;
-        }
-
-        currentChoices = node.choices;
+        currentChoices = new List<DialogueChoice>(node.choices);
         selectedIndex = 0;
         scrollOffset = 0;
 
-        
         isWaitingForContinue = false;
 
         if (waitCoroutine != null)
@@ -75,10 +151,7 @@ public class DialogueManager : MonoBehaviour
             StopCoroutine(waitCoroutine);
             waitCoroutine = null;
         }
-
-        // Don't start WaitToContinue here — let TypeText handle that
     }
-
     void ClearChoices()
     {
         foreach (GameObject slot in instantiatedSlots)
@@ -140,7 +213,6 @@ public class DialogueManager : MonoBehaviour
         if (!dialoguePanel.activeSelf)
             return;
 
-        // If typing is still ongoing, V finishes typing only
         if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
         {
             StopCoroutine(typingCoroutine);
@@ -191,7 +263,17 @@ public class DialogueManager : MonoBehaviour
             DialogueChoice choice = currentChoices[selectedIndex];
 
             if (!string.IsNullOrEmpty(choice.consequenceID))
-                PlayerPrefs.SetInt(choice.consequenceID, 1);
+            {
+                if (choice.consequenceID.StartsWith("GIVE_"))
+                {
+                    string questID = choice.consequenceID.Substring(5);
+                    GiveQuestFromNPC(questID);
+                }
+                else
+                {
+                    PlayerPrefs.SetInt(choice.consequenceID, 1);
+                }
+            }
 
             if (choice.nextNode != null)
                 DisplayNode(choice.nextNode);
@@ -216,7 +298,8 @@ public class DialogueManager : MonoBehaviour
 
         dialoguePanel.SetActive(false);
         ClearChoices();
-        currentChoices.Clear();
+
+        // No currentChoices.Clear() — avoids modifying shared ScriptableObject
     }
 
     IEnumerator TypeText(string fullText)
@@ -242,5 +325,40 @@ public class DialogueManager : MonoBehaviour
         {
             RenderChoices();
         }
+    }
+
+    void GiveQuestFromNPC(string questID)
+    {
+        if (currentNPC == null || currentNPC.quest == null) return;
+
+        if (!currentNPC.quest.questGiven && currentNPC.quest.questID == questID)
+        {
+            currentNPC.quest.questGiven = true;
+            currentNPC.quest.isActive = true;
+            QuestManager.Instance.GiveQuest(currentNPC.quest);
+
+            currentNPC.GetComponent<TalkPromptController>()?.UpdateQuestMarker();
+
+            QuestLogUI questLog = FindObjectOfType<QuestLogUI>();
+            if (questLog != null && questLog.questLogPage.activeSelf)
+            {
+                questLog.UpdateQuestList();
+            }
+        }
+    }
+
+    private DialogueNode CreateFallbackNode(string speaker, string message)
+    {
+        DialogueNode fallback = ScriptableObject.CreateInstance<DialogueNode>();
+        fallback.speakerName = ""; // display as narration
+        fallback.dialogueText = message;
+        fallback.choices = new List<DialogueChoice>();
+
+        if (currentNPC != null && currentNPC.startingNode != null)
+        {
+            fallback.portrait = currentNPC.startingNode.portrait;
+        }
+
+        return fallback;
     }
 }
