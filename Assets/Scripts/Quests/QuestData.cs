@@ -30,8 +30,7 @@ public class QuestData
 
     public QuestType questType = QuestType.Side;
     public ObjectiveType objectiveType = ObjectiveType.None;
-
-    public string targetEnemyTag;
+    public EnemyType targetEnemyType;
     public int targetCount;
     public int currentCount;
 }

@@ -7,7 +7,7 @@ public class PlayerCombat : MonoBehaviour
     private Animator animator;
     private float attackCooldownTimer = 0f;
 
-
+    public bool canAttack = true;
     [Header("Attack Settings")]
     public float attackRange = 1f;
     public int attackDamage = 1;
@@ -20,6 +20,8 @@ public class PlayerCombat : MonoBehaviour
 
     void Update()
     {
+        if (!canAttack)
+        return;
         // Cooldown countdown
         if (attackCooldownTimer > 0f)
         {
@@ -48,7 +50,16 @@ public class PlayerCombat : MonoBehaviour
             if (enemy.CompareTag("Enemy"))
             {
                 Debug.Log("Hit enemy: " + enemy.name);
-                enemy.GetComponent<EnemyHealth>().TakeDamage(attackDamage);
+
+                // Calculate knockback direction: from player to enemy
+                Vector2 knockbackDirection = enemy.transform.position - transform.position;
+                float knockbackForce = 5f; // you can tweak this per weapon or attack
+
+                EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
+                if (enemyHealth != null)
+                {
+                    enemyHealth.TakeDamage(attackDamage, knockbackDirection, knockbackForce);
+                }
             }
         }
     }

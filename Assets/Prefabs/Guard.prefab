@@ -99,7 +99,7 @@ BoxCollider2D:
   m_GameObject: {fileID: 25689252475904894}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: fe6313f32ffaa4542b725e3cf0aed4a2, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 64
@@ -149,11 +149,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npcName: Guard
   startingNode: {fileID: 11400000, guid: 8b8c9d0056a7d514d939953fbb35bf1b, type: 2}
+  questAcceptedNode: {fileID: 0}
+  questCompleteNode: {fileID: 0}
   quest:
     questID: 
+    questName: 
     description: 
     isComplete: 0
-  questGiven: 0
+    isActive: 0
+    questGiven: 0
+    hasCompletedQuest: 0
+    questType: 1
+    objectiveType: 0
+    targetEnemyTag: 
+    targetCount: 0
+    currentCount: 0
+  canTalkAfterQuest: 0
+  postQuestNode: {fileID: 0}
 --- !u!95 &3609854129731525729
 Animator:
   serializedVersion: 5
@@ -200,6 +212,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   promptUI: {fileID: 8548692815779810808}
+  questMarkerUI: {fileID: 0}
+  bobbingSpeed: 2
+  bobbingAmount: 0.05
 --- !u!1 &7229579318916301815
 GameObject:
   m_ObjectHideFlags: 0

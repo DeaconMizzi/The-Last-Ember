@@ -7,15 +7,23 @@ public class EnemyHealth : MonoBehaviour
     public int maxHealth = 3;
     private int currentHealth;
 
+    public EnemyType enemyType;
+
     void Start()
     {
         currentHealth = maxHealth;
     }
 
-    public void TakeDamage(int amount)
+    public void TakeDamage(int amount, Vector2 knockbackDirection, float knockbackForce)
     {
         currentHealth -= amount;
-        Debug.Log(gameObject.name + " took " + amount + " damage!");
+        Debug.Log($"{enemyType} took {amount} damage!");
+        GetComponent<Rigidbody2D>()?.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
+        OrcAI ai = GetComponent<OrcAI>();
+        if (ai != null)
+        {
+            ai.ApplyKnockback(0.25f); // match knockbackDuration
+        }
 
         if (currentHealth <= 0)
         {
@@ -25,7 +33,8 @@ public class EnemyHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log(gameObject.name + " died!");
+        Debug.Log($"{enemyType} died!");
+        QuestManager.Instance.RegisterEnemyKill(enemyType);
         Destroy(gameObject);
     }
 }

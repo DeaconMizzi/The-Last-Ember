@@ -42,9 +42,24 @@ public class QuestLogUI : MonoBehaviour
             Debug.Log("QuestLogUI: Adding quest: " + quest.questID);
 
             string desc = string.IsNullOrEmpty(quest.description) ? "No description." : quest.description;
-            string status = quest.isComplete ? "<color=grey>(Completed)</color>" : "";
+            string status = quest.isComplete ? "<color=green>✔ Completed</color>" : "";
+            string progress = "";
 
-            questText.text += $"<b>{quest.questID}</b> {status}\n<size=85%>{desc}</size>\n\n";
+            if (quest.objectiveType == ObjectiveType.Kill && !quest.isComplete)
+            {
+                progress = $"<i>{quest.currentCount} / {quest.targetCount} slain</i>";
+            }
+
+            string typeLabel = quest.questType == QuestType.Main ? "<color=yellow>[Main]</color>" : "<color=cyan>[Side]</color>";
+
+            questText.text += $"{typeLabel} <b>{quest.questName}</b> {status}\n<size=85%>{desc}</size>";
+
+            if (!string.IsNullOrEmpty(progress))
+            {
+                questText.text += $"\n<size=80%>{progress}</size>";
+            }
+
+            questText.text += "\n\n";
         }
 
         if (string.IsNullOrEmpty(questText.text))
