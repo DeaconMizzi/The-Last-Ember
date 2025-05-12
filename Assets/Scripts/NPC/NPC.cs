@@ -17,10 +17,12 @@ public class NPC : MonoBehaviour
     public DialogueNode questAcceptedNode;
     public DialogueNode questCompleteNode;
 
-    // Reference to the actual quest
-    public QuestData quest = new QuestData();
+    // Reference to an external quest asset (ScriptableObject)
+    public QuestData assignedQuest;
 
     // Controls post-quest behavior
     public bool canTalkAfterQuest = false;
     public DialogueNode postQuestNode;
+    [HideInInspector]
+    public QuestData activeRuntimeQuest;
 }

@@ -9,7 +9,7 @@ public class NPCInteractor : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        if (!GameStateController.IsCutscenePlaying && !GameStateController.IsDialogueActive && Input.GetKeyDown(KeyCode.E))
         {
             Collider2D npcCollider = Physics2D.OverlapCircle(transform.position, interactionRadius, npcLayer);
             if (npcCollider != null)

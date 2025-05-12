@@ -50,22 +50,30 @@ public class TalkPromptController : MonoBehaviour
         float dist = Vector2.Distance(player.position, transform.position);
         bool inRange = dist <= displayDistance;
 
-        // Toggle E prompt with pop effect
+        // Toggle E prompt with cutscene + dialogue check
         if (promptUI != null)
         {
             if (inRange && !wasInRange)
             {
-                promptUI.SetActive(true);
-                if (popRoutine_Prompt != null) StopCoroutine(popRoutine_Prompt);
-                popRoutine_Prompt = StartCoroutine(PopUI(promptUI));
+                if (!GameStateController.IsCutscenePlaying && !GameStateController.IsDialogueActive)
+                {
+                    ShowPrompt(); // Replaces SetActive + pop
+                    if (popRoutine_Prompt != null) StopCoroutine(popRoutine_Prompt);
+                    popRoutine_Prompt = StartCoroutine(PopUI(promptUI));
+                }
             }
             else if (!inRange && wasInRange)
             {
-                promptUI.SetActive(false);
+                HidePrompt();
+            }
+            // NEW: hide if in range but cutscene/dialogue is active
+            else if (inRange && (GameStateController.IsCutscenePlaying || GameStateController.IsDialogueActive))
+            {
+                HidePrompt();
             }
         }
 
-        wasInRange = inRange;
+        wasInRange = inRange; // keep tracking last frame's state
 
         // Update floating positions
         ShiftQuestMarker(inRange);
@@ -91,7 +99,7 @@ public class TalkPromptController : MonoBehaviour
             return;
         }
 
-        bool shouldShow = npc.quest != null && !npc.quest.questGiven;
+        bool shouldShow = npc.assignedQuest != null && npc.activeRuntimeQuest == null;
 
         if (shouldShow && !questMarkerUI.activeSelf)
         {
@@ -162,5 +170,14 @@ public class TalkPromptController : MonoBehaviour
         {
             questMarkerBasePos = new Vector3(0f, npcHeight, 0f); // recenter "!"
         }
+    }
+    void ShowPrompt()
+    {
+        promptUI.SetActive(true); // or .enabled = true if it's an Image
+    }
+
+    void HidePrompt()
+    {
+        promptUI.SetActive(false);
     }
 }

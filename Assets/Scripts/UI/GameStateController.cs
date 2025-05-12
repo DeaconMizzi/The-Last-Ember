@@ -4,10 +4,22 @@ using UnityEngine;
 
 public class GameStateController : MonoBehaviour
 {
+    public static GameStateController Instance { get; private set; }
     public GameObject player;
     public GameObject healthUI;
     public GameObject[] enemies;
 
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
     public void FreezeGame()
     {
         Debug.Log("FreezeGame called!");
@@ -68,6 +80,13 @@ public class GameStateController : MonoBehaviour
         }
     }
 
+    public static bool IsCutscenePlaying { get; private set; }
+
+    public void SetCutsceneState(bool state)
+    {
+        IsCutscenePlaying = state;
+    }
+
     public void UnfreezeGame()
     {
         Debug.Log("UnfreezeGame called!");
@@ -89,8 +108,15 @@ public class GameStateController : MonoBehaviour
         }
     }
 
+    public static bool IsDialogueActive { get; private set; }
+
+    public void SetDialogueState(bool state)
+    {
+        IsDialogueActive = state;
+    }
     void Start()
-{
-    FreezeGame(); // for testing
-}
+    {
+        QuestManager.Instance.ResetAllQuestStates();
+        FreezeGame(); // if you're already using that
+    }
 }

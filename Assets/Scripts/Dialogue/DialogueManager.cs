@@ -40,6 +40,19 @@ public class DialogueManager : MonoBehaviour
 
     public void StartDialogue(NPC npc)
     {
+        if (GameStateController.IsCutscenePlaying)
+        {
+            Debug.Log("Dialogue start prevented during cutscene.");
+            return;
+        }
+
+        if (GameStateController.IsDialogueActive)
+        {
+            Debug.Log("Dialogue already active.");
+            return;
+        }
+
+        GameStateController.Instance?.SetDialogueState(true);
         currentNPC = npc;
 
         if (npc == null)
@@ -48,7 +61,8 @@ public class DialogueManager : MonoBehaviour
             return;
         }
 
-        if (npc.quest != null && npc.quest.hasCompletedQuest && !npc.canTalkAfterQuest)
+        // If quest was completed before and they should be silent
+        if (npc.assignedQuest != null && npc.assignedQuest.hasCompletedQuest && !npc.canTalkAfterQuest)
         {
             DialogueNode silentNode = CreateFallbackNode(npc.npcName, "They look busy and don’t respond.");
             dialoguePanel.SetActive(true);
@@ -56,56 +70,52 @@ public class DialogueManager : MonoBehaviour
             return;
         }
 
-        if (npc.quest != null)
+        // If a runtime quest is active and completed
+        if (npc.activeRuntimeQuest != null && npc.activeRuntimeQuest.questGiven && QuestManager.Instance.IsQuestComplete(npc.activeRuntimeQuest.questID))
         {
-            if (npc.quest.questGiven && QuestManager.Instance.IsQuestComplete(npc.quest.questID))
+            if (npc.questCompleteNode != null)
             {
-                if (npc.questCompleteNode != null)
-                {
-                    currentNode = npc.questCompleteNode;
-                }
-                else
-                {
-                    currentNode = CreateFallbackNode(npc.npcName, "They look busy and don’t respond.");
-                }
-
-                QuestManager.Instance.RemoveQuest(npc.quest.questID);
-                npc.quest.questGiven = false;
-                npc.quest.isComplete = false;
-                npc.quest.hasCompletedQuest = true;
-
-                FindObjectOfType<QuestLogUI>()?.UpdateQuestList();
-
-                dialoguePanel.SetActive(true);
-                DisplayNode(currentNode);
-                return;
-            }
-
-            if (npc.quest.questGiven)
-            {
-                if (npc.questAcceptedNode != null)
-                {
-                    currentNode = npc.questAcceptedNode;
-                }
-                else
-                {
-                    currentNode = CreateFallbackNode(npc.npcName, "They don’t seem like they want to talk right now.");
-                }
+                currentNode = npc.questCompleteNode;
             }
             else
             {
-                currentNode = npc.startingNode;
+                currentNode = CreateFallbackNode(npc.npcName, "They look busy and don’t respond.");
+            }
+
+            // Remove and mark as completed
+            QuestManager.Instance.RemoveQuest(npc.activeRuntimeQuest.questID);
+            npc.activeRuntimeQuest.questGiven = false;
+            npc.activeRuntimeQuest.isComplete = false;
+            npc.assignedQuest.hasCompletedQuest = true;
+
+            FindObjectOfType<QuestLogUI>()?.UpdateQuestList();
+
+            dialoguePanel.SetActive(true);
+            DisplayNode(currentNode);
+            return;
+        }
+
+        // If quest is active but incomplete
+        if (npc.activeRuntimeQuest != null && npc.activeRuntimeQuest.questGiven)
+        {
+            if (npc.questAcceptedNode != null)
+            {
+                currentNode = npc.questAcceptedNode;
+            }
+            else
+            {
+                currentNode = CreateFallbackNode(npc.npcName, "They don’t seem like they want to talk right now.");
             }
         }
         else
         {
+            // Start dialogue if no quest has been cloned/started yet
             currentNode = npc.startingNode;
         }
 
         dialoguePanel.SetActive(true);
         DisplayNode(currentNode);
-    }
-
+}
    public void DisplayNode(DialogueNode node)
     {
         currentNode = node;
@@ -213,6 +223,26 @@ public class DialogueManager : MonoBehaviour
         if (!dialoguePanel.activeSelf)
             return;
 
+        // Handle Simple Dialogue Mode
+        if (simpleDialogueLines != null)
+        {
+            if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
+            {
+                StopCoroutine(typingCoroutine);
+                dialogueText.text = simpleDialogueLines[simpleDialogueIndex];
+                typingCoroutine = null;
+
+                if (waitCoroutine != null)
+                    StopCoroutine(waitCoroutine);
+                waitCoroutine = StartCoroutine(WaitForSimpleContinue());
+
+                return;
+            }
+
+            return; // Prevent the rest of this method (which relies on currentNode)
+        }
+
+        // Handle Node-Based Dialogue (standard NPC quests)
         if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
         {
             StopCoroutine(typingCoroutine);
@@ -298,6 +328,7 @@ public class DialogueManager : MonoBehaviour
 
         dialoguePanel.SetActive(false);
         ClearChoices();
+        GameStateController.Instance?.SetDialogueState(false);
 
         // No currentChoices.Clear() — avoids modifying shared ScriptableObject
     }
@@ -329,13 +360,15 @@ public class DialogueManager : MonoBehaviour
 
     void GiveQuestFromNPC(string questID)
     {
-        if (currentNPC == null || currentNPC.quest == null) return;
+        if (currentNPC == null || currentNPC.assignedQuest == null) return;
 
-        if (!currentNPC.quest.questGiven && currentNPC.quest.questID == questID)
+        if (currentNPC.assignedQuest != null && currentNPC.assignedQuest.questID == questID)
         {
-            currentNPC.quest.questGiven = true;
-            currentNPC.quest.isActive = true;
-            QuestManager.Instance.GiveQuest(currentNPC.quest);
+            QuestData runtimeQuest = QuestManager.Instance.CreateRuntimeCopy(currentNPC.assignedQuest);
+            runtimeQuest.questGiven = true;
+            runtimeQuest.isActive = true;
+            QuestManager.Instance.GiveQuest(runtimeQuest);
+            currentNPC.activeRuntimeQuest = runtimeQuest;
 
             currentNPC.GetComponent<TalkPromptController>()?.UpdateQuestMarker();
 
@@ -344,7 +377,7 @@ public class DialogueManager : MonoBehaviour
             {
                 questLog.UpdateQuestList();
             }
-        }
+}
     }
 
     private DialogueNode CreateFallbackNode(string speaker, string message)
@@ -369,6 +402,20 @@ public class DialogueManager : MonoBehaviour
 
     public void StartSimpleDialogue(string[] lines, string speakerName, Sprite portrait = null, System.Action onComplete = null)
     {
+        if (GameStateController.IsCutscenePlaying && dialoguePanel.activeSelf)
+        {
+            Debug.Log("Dialogue already running during cutscene.");
+            return;
+        }
+
+        if (GameStateController.IsDialogueActive)
+        {
+            Debug.Log("Simple dialogue already active.");
+            return;
+        }
+
+        GameStateController.Instance?.SetDialogueState(true);
+
         simpleDialogueLines = lines;
         simpleDialogueIndex = 0;
         onSimpleDialogueComplete = onComplete;
@@ -390,7 +437,6 @@ public class DialogueManager : MonoBehaviour
 
         typingCoroutine = StartCoroutine(TypeSimpleLine(simpleDialogueLines[simpleDialogueIndex]));
     }
-
     IEnumerator TypeSimpleLine(string line)
     {
         dialogueText.text = "";
@@ -436,5 +482,6 @@ public class DialogueManager : MonoBehaviour
         dialogueText.text = "";
         simpleDialogueLines = null;
         onSimpleDialogueComplete?.Invoke();
+        GameStateController.Instance?.SetDialogueState(false);
     }
 }

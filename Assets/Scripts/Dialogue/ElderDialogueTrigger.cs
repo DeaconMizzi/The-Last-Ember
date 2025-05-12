@@ -31,11 +31,11 @@ public class ElderDialogueTrigger : MonoBehaviour
         {
             foreach (var npc in FindObjectsOfType<NPC>())
             {
-                if (npc.quest != null && npc.quest.questID == questIDToGive)
+                if (npc.assignedQuest != null && npc.assignedQuest.questID == questIDToGive)
                 {
-                    npc.quest.questGiven = true;
-                    npc.quest.isActive = true;
-                    QuestManager.Instance.GiveQuest(npc.quest);
+                    npc.assignedQuest.questGiven = true;
+                    npc.assignedQuest.isActive = true;
+                    QuestManager.Instance.GiveQuest(npc.assignedQuest);
                     npc.GetComponent<TalkPromptController>()?.UpdateQuestMarker();
                     break;
                 }

@@ -30,13 +30,13 @@ public class QuestManager : MonoBehaviour
             }
         }
     }
+
     public void GiveQuest(QuestData quest)
     {
         if (!activeQuests.ContainsKey(quest.questID))
         {
             activeQuests.Add(quest.questID, quest);
             Debug.Log("Quest started: " + quest.description);
-
             OnQuestGiven?.Invoke(quest.questID);
         }
     }
@@ -54,33 +54,35 @@ public class QuestManager : MonoBehaviour
     {
         foreach (var quest in activeQuests.Values)
         {
-            if (quest.objectiveType == ObjectiveType.Kill &&
-                quest.targetEnemyType == killedType &&
-                !quest.isComplete)
+            if (quest.isComplete) continue;
+
+            foreach (var obj in quest.objectives)
             {
-                quest.currentCount++;
-
-                if (quest.currentCount >= quest.targetCount)
+                if (obj.type == ObjectiveType.KillTarget && obj.targetID == killedType.ToString() && !obj.IsComplete)
                 {
-                    quest.isComplete = true;
-                    Debug.Log($"Quest completed: {quest.questID}");
+                    obj.currentCount++;
+                    Debug.Log($"Quest {quest.questID} - {obj.targetID}: {obj.currentCount}/{obj.requiredCount}");
+
+                    if (quest.AllObjectivesComplete)
+                    {
+                        quest.isComplete = true;
+                        Debug.Log($"Quest completed: {quest.questID}");
+                    }
+
+                    FindObjectOfType<QuestLogUI>()?.UpdateQuestList();
+                    FindObjectOfType<QuestPopupUI>()?.ShowPopup($"{quest.questName}: {obj.currentCount}/{obj.requiredCount}");
+
+                    break;
                 }
-
-                FindObjectOfType<QuestLogUI>()?.UpdateQuestList();
-
-                string msg = $"{quest.questName}: {quest.currentCount} / {quest.targetCount}";
-                FindObjectOfType<QuestPopupUI>()?.ShowPopup(msg);
-
-                break;
             }
         }
     }
+
     public bool IsQuestComplete(string questID)
     {
         return activeQuests.ContainsKey(questID) && activeQuests[questID].isComplete;
     }
 
-    // ✅ NEW: Return a list of all active quests
     public List<QuestData> GetAllQuests()
     {
         return new List<QuestData>(activeQuests.Values);
@@ -94,4 +96,43 @@ public class QuestManager : MonoBehaviour
             Debug.Log("Quest removed: " + questID);
         }
     }
+
+    public void ResetAllQuestStates()
+    {
+        foreach (var quest in Resources.LoadAll<QuestData>(""))
+        {
+            quest.isActive = false;
+            quest.questGiven = false;
+            quest.isComplete = false;
+            quest.hasCompletedQuest = false;
+            Debug.Log($"Reset quest: {quest.questID} (given: {quest.questGiven}, active: {quest.isActive})");
+
+
+            foreach (var obj in quest.objectives)
+            {
+                
+                obj.currentCount = 0;
+            }
+        }
+
+        Debug.Log("All quest states reset.");
     }
+
+    public QuestData CreateRuntimeCopy(QuestData original)
+    {
+        QuestData clone = ScriptableObject.Instantiate(original);
+
+        // Reset runtime fields
+        clone.isActive = false;
+        clone.isComplete = false;
+        clone.questGiven = false;
+        clone.hasCompletedQuest = false;
+
+        foreach (var obj in clone.objectives)
+        {
+            obj.currentCount = 0;
+        }
+
+        return clone;
+    }
+}
