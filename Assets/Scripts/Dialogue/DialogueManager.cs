@@ -361,4 +361,80 @@ public class DialogueManager : MonoBehaviour
 
         return fallback;
     }
+
+    // ========== SIMPLE DIALOGUE SUPPORT ==========
+    private string[] simpleDialogueLines;
+    private int simpleDialogueIndex = 0;
+    private System.Action onSimpleDialogueComplete;
+
+    public void StartSimpleDialogue(string[] lines, string speakerName, Sprite portrait = null, System.Action onComplete = null)
+    {
+        simpleDialogueLines = lines;
+        simpleDialogueIndex = 0;
+        onSimpleDialogueComplete = onComplete;
+
+        speakerText.text = speakerName;
+
+        if (portraitImage != null)
+        {
+            portraitImage.sprite = portrait;
+            portraitImage.enabled = portrait != null;
+        }
+
+        portraitBackground?.SetActive(portrait != null);
+        choicePanelBackground?.SetActive(false);
+        dialoguePanel.SetActive(true);
+
+        if (typingCoroutine != null)
+            StopCoroutine(typingCoroutine);
+
+        typingCoroutine = StartCoroutine(TypeSimpleLine(simpleDialogueLines[simpleDialogueIndex]));
+    }
+
+    IEnumerator TypeSimpleLine(string line)
+    {
+        dialogueText.text = "";
+        foreach (char c in line)
+        {
+            dialogueText.text += c;
+            yield return new WaitForSeconds(typingSpeed);
+        }
+
+        typingCoroutine = null;
+        isWaitingForContinue = true;
+        if (waitCoroutine != null)
+            StopCoroutine(waitCoroutine);
+        waitCoroutine = StartCoroutine(WaitForSimpleContinue());
+    }
+
+    IEnumerator WaitForSimpleContinue()
+    {
+        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.V));
+        yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.V));
+
+        isWaitingForContinue = false;
+        simpleDialogueIndex++;
+
+        if (simpleDialogueIndex < simpleDialogueLines.Length)
+        {
+            if (typingCoroutine != null)
+                StopCoroutine(typingCoroutine);
+
+            typingCoroutine = StartCoroutine(TypeSimpleLine(simpleDialogueLines[simpleDialogueIndex]));
+        }
+        else
+        {
+            EndSimpleDialogue();
+        }
+
+        waitCoroutine = null;
+    }
+
+    void EndSimpleDialogue()
+    {
+        dialoguePanel.SetActive(false);
+        dialogueText.text = "";
+        simpleDialogueLines = null;
+        onSimpleDialogueComplete?.Invoke();
+    }
 }
