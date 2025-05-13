@@ -24,4 +24,4 @@ MonoBehaviour:
   isActive: 0
   isComplete: 0
   questGiven: 0
-  hasCompletedQuest: 1
+  hasCompletedQuest: 0
