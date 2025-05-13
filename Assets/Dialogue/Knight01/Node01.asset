@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a6326df0dff5a74e976cdea0ffa1f76, type: 3}
   m_Name: Node01
   m_EditorClassIdentifier: 
-  speakerName: Knight
+  speakerName: Town Guard
   dialogueText: Be careful out there! The orcs have taken over the Wilderness...
   portrait: {fileID: 21300000, guid: db7a0b6740e6799458ed78dddde2e2e3, type: 3}
   choices: []
-  nextAutoNode: {fileID: 0}
+  nextAutoNode: {fileID: 11400000, guid: 0d1f171ab6a40ba4e8c0976cfe2c14bf, type: 2}

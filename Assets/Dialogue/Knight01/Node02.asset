@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a6326df0dff5a74e976cdea0ffa1f76, type: 3}
+  m_Name: Node02
+  m_EditorClassIdentifier: 
+  speakerName: Town Guard
+  dialogueText: There are a few Orcs ahead, can you dispose of them?
+  portrait: {fileID: 21300000, guid: db7a0b6740e6799458ed78dddde2e2e3, type: 3}
+  choices:
+  - choiceText: Sure!
+    nextNode: {fileID: 11400000, guid: 9189171317e43904991c25e92ed97eaf, type: 2}
+    consequenceID: GIVE_killorcs
+  - choiceText: I'm a bit busy..
+    nextNode: {fileID: 11400000, guid: 0d8812447f6302c40840b070efeae05f, type: 2}
+    consequenceID: 
+  nextAutoNode: {fileID: 0}
