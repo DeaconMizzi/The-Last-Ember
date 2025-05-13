@@ -241,6 +241,7 @@ public class DialogueManager : MonoBehaviour
 
             return; // Prevent the rest of this method (which relies on currentNode)
         }
+        
 
         // Handle Node-Based Dialogue (standard NPC quests)
         if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
@@ -309,6 +310,13 @@ public class DialogueManager : MonoBehaviour
                 DisplayNode(choice.nextNode);
             else
                 EndDialogue();
+        }
+                // Press Escape to exit dialogue during a choice node
+        if (currentChoices != null && currentChoices.Count > 0 && Input.GetKeyDown(KeyCode.Escape))
+        {
+            Debug.Log("Dialogue cancelled by player (Escape pressed).");
+            EndDialogue();
+            return;
         }
     }
 

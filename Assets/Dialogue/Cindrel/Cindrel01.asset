@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a6326df0dff5a74e976cdea0ffa1f76, type: 3}
+  m_Name: Cindrel01
+  m_EditorClassIdentifier: 
+  speakerName: Cindrel
+  dialogueText: The market has been pretty empty lately....
+  portrait: {fileID: 21300000, guid: e0ee8c321c2bc08478bdc6c07bcf074a, type: 3}
+  choices: []
+  nextAutoNode: {fileID: 11400000, guid: d9784a05c80c97d4a845b4040fd1e4f6, type: 2}

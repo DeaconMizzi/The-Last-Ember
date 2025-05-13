@@ -104,7 +104,6 @@ public class TalkPromptController : MonoBehaviour
         if (shouldShow && !questMarkerUI.activeSelf)
         {
             questMarkerUI.SetActive(true);
-
             if (popRoutine_Quest != null) StopCoroutine(popRoutine_Quest);
             popRoutine_Quest = StartCoroutine(PopUI(questMarkerUI));
         }
@@ -112,6 +111,9 @@ public class TalkPromptController : MonoBehaviour
         {
             questMarkerUI.SetActive(false);
         }
+
+        // 🔁 Update layout now that the marker state changed
+        ShiftQuestMarker(wasInRange);
     }
 
     private IEnumerator PopUI(GameObject target)
@@ -150,27 +152,37 @@ public class TalkPromptController : MonoBehaviour
 
     private void ShiftQuestMarker(bool playerInRange)
     {
-        if (questMarkerUI == null || promptUI == null) return;
+        if (promptUI == null) return;
 
-        bool hasQuestMarker = questMarkerUI.activeSelf;
+        // 🔎 Quest marker may be null — treat as not having one
+        bool hasQuestMarker = questMarkerUI != null && questMarkerUI.activeSelf;
 
         if (playerInRange)
         {
             if (hasQuestMarker)
             {
                 questMarkerBasePos = new Vector3(-0.50f, npcHeight, 0f);
-                promptBasePos = new Vector3(0.50f, npcHeight, 0f); // "E" on the right
+                promptBasePos = new Vector3(0.50f, npcHeight, 0f);
             }
             else
             {
-                promptBasePos = new Vector3(0f, npcHeight, 0f); // "E" centered
+                questMarkerBasePos = new Vector3(0f, npcHeight, 0f);
+                promptBasePos = new Vector3(0f, npcHeight, 0f); // 👈 centered
             }
         }
         else
         {
-            questMarkerBasePos = new Vector3(0f, npcHeight, 0f); // recenter "!"
+            questMarkerBasePos = new Vector3(0f, npcHeight, 0f);
         }
+
+        // ✅ Apply immediately
+        if (questMarkerUI != null)
+            questMarkerUI.transform.localPosition = questMarkerBasePos;
+
+        promptUI.transform.localPosition = promptBasePos;
     }
+
+
     void ShowPrompt()
     {
         promptUI.SetActive(true); // or .enabled = true if it's an Image
