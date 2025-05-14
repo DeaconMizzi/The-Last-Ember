@@ -17,12 +17,13 @@ public class NPC : MonoBehaviour
     public DialogueNode questAcceptedNode;
     public DialogueNode questCompleteNode;
 
-    // Reference to an external quest asset (ScriptableObject)
-    public QuestData assignedQuest;
+    [Header("One-Time Conditional Dialogue")]
+    public string memoryFlagCondition;         // Flag that enables alternate line
+    public string conditionalUsedFlagID;       // Flag that prevents it repeating
+    public DialogueNode conditionalStartingNode;
 
-    // Controls post-quest behavior
-    public bool canTalkAfterQuest = false;
-    public DialogueNode postQuestNode;
-    [HideInInspector]
-    public QuestData activeRuntimeQuest;
+    [Header("Quest")]
+    public QuestData assignedQuest;
+    [HideInInspector] public QuestData activeRuntimeQuest;
+    public bool canTalkAfterQuest = true;
 }

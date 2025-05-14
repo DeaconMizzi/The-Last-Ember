@@ -3,8 +3,18 @@ using TMPro;
 
 public class QuestLogUI : MonoBehaviour
 {
+    public static QuestLogUI Instance { get; private set; }
+
     public GameObject questLogPage;
     public TMP_Text questText;
+
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject); // Prevent duplicate UIs
+    }
 
     void Update()
     {
@@ -71,5 +81,11 @@ public class QuestLogUI : MonoBehaviour
         {
             questText.text = "<i>No active quests.</i>";
         }
+    }
+
+    // Placeholder method for journal messages
+    public void ShowQuestPopup(string message)
+    {
+        Debug.Log($"[Journal] {message}"); // You can replace this with a UI popup later
     }
 }

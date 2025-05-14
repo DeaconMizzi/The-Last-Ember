@@ -7,5 +7,6 @@ public enum EnemyType
     Orc,
     Skeleton,
     Slime,
+    Golem,
     // Add more as needed
 }

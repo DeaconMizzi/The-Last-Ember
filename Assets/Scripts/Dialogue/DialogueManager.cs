@@ -73,7 +73,17 @@ public class DialogueManager : MonoBehaviour
         // If a runtime quest is active and completed
         if (npc.activeRuntimeQuest != null && npc.activeRuntimeQuest.questGiven && QuestManager.Instance.IsQuestComplete(npc.activeRuntimeQuest.questID))
         {
-            if (npc.questCompleteNode != null)
+            // One-time conditional dialogue override
+            bool hasTriggerFlag = !string.IsNullOrEmpty(npc.memoryFlagCondition) && MemoryFlags.Get(npc.memoryFlagCondition);
+            bool hasUsedFlag = !string.IsNullOrEmpty(npc.conditionalUsedFlagID) && MemoryFlags.Get(npc.conditionalUsedFlagID);
+
+            if (hasTriggerFlag && !hasUsedFlag && npc.conditionalStartingNode != null)
+            {
+                currentNode = npc.conditionalStartingNode;
+                if (!string.IsNullOrEmpty(npc.conditionalUsedFlagID))
+                    MemoryFlags.Set(npc.conditionalUsedFlagID);
+            }
+            else if (npc.questCompleteNode != null)
             {
                 currentNode = npc.questCompleteNode;
             }
@@ -82,7 +92,6 @@ public class DialogueManager : MonoBehaviour
                 currentNode = CreateFallbackNode(npc.npcName, "They look busy and don’t respond.");
             }
 
-            // Remove and mark as completed
             QuestManager.Instance.RemoveQuest(npc.activeRuntimeQuest.questID);
             npc.activeRuntimeQuest.questGiven = false;
             npc.activeRuntimeQuest.isComplete = false;
@@ -109,13 +118,27 @@ public class DialogueManager : MonoBehaviour
         }
         else
         {
-            // Start dialogue if no quest has been cloned/started yet
-            currentNode = npc.startingNode;
+            // One-time conditional dialogue check when no quest is active
+            bool hasTriggerFlag = !string.IsNullOrEmpty(npc.memoryFlagCondition) && MemoryFlags.Get(npc.memoryFlagCondition);
+            bool hasUsedFlag = !string.IsNullOrEmpty(npc.conditionalUsedFlagID) && MemoryFlags.Get(npc.conditionalUsedFlagID);
+
+            if (hasTriggerFlag && !hasUsedFlag && npc.conditionalStartingNode != null)
+            {
+                currentNode = npc.conditionalStartingNode;
+                if (!string.IsNullOrEmpty(npc.conditionalUsedFlagID))
+                    MemoryFlags.Set(npc.conditionalUsedFlagID);
+            }
+            else
+            {
+                currentNode = npc.startingNode;
+            }
         }
 
         dialoguePanel.SetActive(true);
         DisplayNode(currentNode);
-}
+    }
+
+
    public void DisplayNode(DialogueNode node)
     {
         currentNode = node;
@@ -302,7 +325,7 @@ public class DialogueManager : MonoBehaviour
                 }
                 else
                 {
-                    PlayerPrefs.SetInt(choice.consequenceID, 1);
+                    MemoryFlags.Set(choice.consequenceID);
                 }
             }
 

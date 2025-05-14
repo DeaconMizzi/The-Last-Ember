@@ -8,10 +8,12 @@ public class EnemyHealth : MonoBehaviour
     private int currentHealth;
 
     public EnemyType enemyType;
+    private Animator animator;
 
     void Start()
     {
         currentHealth = maxHealth;
+        animator = GetComponent<Animator>();
     }
 
     public void TakeDamage(int amount, Vector2 knockbackDirection, float knockbackForce)
@@ -19,10 +21,16 @@ public class EnemyHealth : MonoBehaviour
         currentHealth -= amount;
         Debug.Log($"{enemyType} took {amount} damage!");
         GetComponent<Rigidbody2D>()?.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
+
         OrcAI ai = GetComponent<OrcAI>();
         if (ai != null)
         {
-            ai.ApplyKnockback(0.25f); // match knockbackDuration
+            ai.ApplyKnockback(0.25f);
+        }
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Hurt");
         }
 
         if (currentHealth <= 0)
@@ -35,6 +43,18 @@ public class EnemyHealth : MonoBehaviour
     {
         Debug.Log($"{enemyType} died!");
         QuestManager.Instance.RegisterEnemyKill(enemyType);
-        Destroy(gameObject);
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Death");
+        }
+
+        OrcAI ai = GetComponent<OrcAI>();
+        if (ai != null) ai.enabled = false;
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        Destroy(gameObject, 1.5f); // delay to allow death animation
     }
 }
