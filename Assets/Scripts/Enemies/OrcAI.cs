@@ -28,6 +28,12 @@ public class OrcAI : MonoBehaviour
     private enum State { Patrol, Chase }
     private State currentState = State.Patrol;
 
+    [Header("Directional Attack")]
+    public float verticalTolerance = 0.5f;
+
+    [Header("Attack Hitbox")]
+    public GameObject attackHitbox; // Assigned in inspector
+
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -42,7 +48,7 @@ public class OrcAI : MonoBehaviour
 
     void Update()
     {
-        float distanceToPlayer = Vector2.Distance((Vector2)transform.position, (Vector2)player.position);
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         currentState = (distanceToPlayer <= chaseRange) ? State.Chase : State.Patrol;
 
         if (anim != null)
@@ -63,14 +69,17 @@ public class OrcAI : MonoBehaviour
 
         if (currentState == State.Chase)
         {
-            ChasePlayer();
+            Vector2 toPlayer = player.position - transform.position;
+            float horizontalDist = Mathf.Abs(toPlayer.x);
+            float verticalDist = Mathf.Abs(toPlayer.y);
 
-            float distance = Vector2.Distance((Vector2)transform.position, (Vector2)player.position);
-            Debug.DrawLine(transform.position, player.position, Color.magenta);
-            Debug.Log("Distance to player: " + distance);
-            if (distance <= attackRange && Time.time - lastAttackTime > attackCooldown)
+            bool alignedHorizontally = horizontalDist <= attackRange;
+            bool verticallyClose = verticalDist <= verticalTolerance;
+
+            ChasePlayer(toPlayer);
+
+            if (!isAttacking && alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
-                Debug.Log("In attack range!");
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
             }
@@ -90,14 +99,21 @@ public class OrcAI : MonoBehaviour
 
         MoveTo(patrolTarget);
     }
+
     Vector2 GetNewPatrolPoint()
     {
         Vector2 offset = Random.insideUnitCircle * patrolRadius;
         return startPosition + offset;
     }
-    void ChasePlayer()
+
+    void ChasePlayer(Vector2 toPlayer)
     {
         MoveTo(player.position);
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.flipX = toPlayer.x < 0;
+        }
     }
 
     void MoveTo(Vector2 target)
@@ -120,23 +136,30 @@ public class OrcAI : MonoBehaviour
         if (anim != null)
             anim.SetTrigger("Attack");
 
-        // ✅ Wait for wind-up
-        yield return new WaitForSeconds(0.8f);
-
-        // ✅ Check distance again before applying damage
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        if (distanceToPlayer <= attackRange)
-        {
-            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-                playerHealth.TakeDamage(attackDamage);
-        }
-
-        // Finish animation
-        yield return new WaitForSeconds(attackDuration - 0.8f);
+        yield return new WaitForSeconds(attackDuration);
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
+    }
+
+    // Called from animation event when hammer hits
+    public void EnableHitbox()
+    {
+        if (attackHitbox != null)
+        {
+            attackHitbox.SetActive(true);
+
+            var hitboxScript = attackHitbox.GetComponent<EnemyWeaponHitbox>();
+            if (hitboxScript != null)
+                hitboxScript.ResetHit();
+        }
+    }
+
+    // Called from animation event after slam impact
+    public void DisableHitbox()
+    {
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
     }
 
     public void ApplyKnockback(float duration)
@@ -153,5 +176,14 @@ public class OrcAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, attackRange);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, patrolRadius);
+
+        if (spriteRenderer != null && attackHitbox != null)
+        {
+            Gizmos.color = Color.cyan;
+            Vector3 center = attackHitbox.transform.position;
+            BoxCollider2D col = attackHitbox.GetComponent<BoxCollider2D>();
+            if (col != null)
+                Gizmos.DrawWireCube(center, col.size);
+        }
     }
 }

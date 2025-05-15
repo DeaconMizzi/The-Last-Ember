@@ -8,6 +8,8 @@ TagManager:
   - Enemies
   - NPC
   - Orc
+  - Golem
+  - EnemyAttack
   layers:
   - Default
   - TransparentFX
@@ -47,6 +49,9 @@ TagManager:
     locked: 0
   - name: Ground
     uniqueID: 2522732103
+    locked: 0
+  - name: Ground2
+    uniqueID: 4289199841
     locked: 0
   - name: Walk
     uniqueID: 1417688193

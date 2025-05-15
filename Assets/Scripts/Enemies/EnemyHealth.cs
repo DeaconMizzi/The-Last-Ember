@@ -49,12 +49,24 @@ public class EnemyHealth : MonoBehaviour
             animator.SetTrigger("Death");
         }
 
+        // Disable AI
         OrcAI ai = GetComponent<OrcAI>();
         if (ai != null) ai.enabled = false;
 
+        // Disable collider
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
-        Destroy(gameObject, 1.5f); // delay to allow death animation
+        // Stop all physics movement
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.gravityScale = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+
+        // Destroy after delay to allow death animation
+        Destroy(gameObject, 1.5f);
     }
 }

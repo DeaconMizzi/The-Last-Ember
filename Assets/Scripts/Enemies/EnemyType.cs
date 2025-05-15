@@ -8,5 +8,6 @@ public enum EnemyType
     Skeleton,
     Slime,
     Golem,
+    Boss,
     // Add more as needed
 }

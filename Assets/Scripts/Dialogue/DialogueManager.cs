@@ -323,6 +323,11 @@ public class DialogueManager : MonoBehaviour
                     string questID = choice.consequenceID.Substring(5);
                     GiveQuestFromNPC(questID);
                 }
+                else if (choice.consequenceID == "ANGRY_GUARD")
+                {
+                    DisturbableNPC d = currentNPC?.GetComponent<DisturbableNPC>();
+                    d?.TriggerAttack();
+                }
                 else
                 {
                     MemoryFlags.Set(choice.consequenceID);
@@ -513,6 +518,27 @@ public class DialogueManager : MonoBehaviour
         dialogueText.text = "";
         simpleDialogueLines = null;
         onSimpleDialogueComplete?.Invoke();
+        GameStateController.Instance?.SetDialogueState(false);
+    }
+
+    public void ForceEndDialogue()
+    {
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+            typingCoroutine = null;
+        }
+
+        if (waitCoroutine != null)
+        {
+            StopCoroutine(waitCoroutine);
+            waitCoroutine = null;
+        }
+
+        ClearChoices();
+        dialogueText.text = "";
+        dialoguePanel.SetActive(false);
+
         GameStateController.Instance?.SetDialogueState(false);
     }
 }
