@@ -4,15 +4,18 @@ using UnityEngine;
 
 public class PaperInteractable : MonoBehaviour
 {
-    public string[] paperLines;
+    [TextArea] public string[] paperLines;
     public string title = "Note";
     public Sprite icon;
     public GameObject talkPrompt;
 
-    public string memoryFlagID = "note_memory_key"; // Unique ID for this note
+    [Header("Flags")]
+    public string memoryFlagID = "note_memory_key";
     public bool hideAfterReading = true;
 
+    [Header("Interaction")]
     public float interactRange = 2f;
+
     private Transform player;
     private bool promptShown = false;
     private bool hasBeenRead = false;
@@ -26,15 +29,17 @@ public class PaperInteractable : MonoBehaviour
 
         if (!string.IsNullOrEmpty(memoryFlagID) && MemoryFlags.Get(memoryFlagID))
         {
-            hasBeenRead = true;
             if (hideAfterReading)
+            {
+                hasBeenRead = true;
                 gameObject.SetActive(false);
+            }
         }
     }
 
     void Update()
     {
-        if (player == null || hasBeenRead) return;
+        if (player == null) return;
 
         float distance = Vector2.Distance(transform.position, player.position);
 
@@ -46,9 +51,14 @@ public class PaperInteractable : MonoBehaviour
                 promptShown = true;
             }
 
-            if (Input.GetKeyDown(KeyCode.E))
+            if (!hasBeenRead && Input.GetKeyDown(KeyCode.E))
             {
                 DialogueManager.Instance.StartSimpleDialogue(paperLines, title, icon, OnNoteRead);
+            }
+            else if (hasBeenRead && !hideAfterReading && Input.GetKeyDown(KeyCode.E))
+            {
+                // Allow re-reading if note is not hidden
+                DialogueManager.Instance.StartSimpleDialogue(paperLines, title, icon, null);
             }
         }
         else
@@ -70,9 +80,10 @@ public class PaperInteractable : MonoBehaviour
 
         QuestLogUI.Instance?.ShowQuestPopup("Note added to journal");
 
-        hasBeenRead = true;
-
         if (hideAfterReading)
+        {
+            hasBeenRead = true;
             gameObject.SetActive(false);
+        }
     }
 }

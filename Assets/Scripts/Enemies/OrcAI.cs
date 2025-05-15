@@ -28,6 +28,13 @@ public class OrcAI : MonoBehaviour
     private enum State { Patrol, Chase }
     private State currentState = State.Patrol;
 
+    [Header("Attack Settings")]
+    public bool useHitboxAttack = false;
+    public GameObject attackHitbox;
+
+    [Header("Directional Attack")]
+    public float verticalTolerance = 0.5f;
+
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -42,7 +49,7 @@ public class OrcAI : MonoBehaviour
 
     void Update()
     {
-        float distanceToPlayer = Vector2.Distance((Vector2)transform.position, (Vector2)player.position);
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         currentState = (distanceToPlayer <= chaseRange) ? State.Chase : State.Patrol;
 
         if (anim != null)
@@ -63,14 +70,19 @@ public class OrcAI : MonoBehaviour
 
         if (currentState == State.Chase)
         {
-            ChasePlayer();
+            Vector2 toPlayer = player.position - transform.position;
+            float horizontalDist = Mathf.Abs(toPlayer.x);
+            float verticalDist = Mathf.Abs(toPlayer.y);
 
-            float distance = Vector2.Distance((Vector2)transform.position, (Vector2)player.position);
+            bool alignedHorizontally = horizontalDist <= attackRange;
+            bool verticallyClose = verticalDist <= verticalTolerance;
+
+            ChasePlayer(toPlayer);
+
             Debug.DrawLine(transform.position, player.position, Color.magenta);
-            Debug.Log("Distance to player: " + distance);
-            if (distance <= attackRange && Time.time - lastAttackTime > attackCooldown)
+
+            if (alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
-                Debug.Log("In attack range!");
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
             }
@@ -90,14 +102,21 @@ public class OrcAI : MonoBehaviour
 
         MoveTo(patrolTarget);
     }
+
     Vector2 GetNewPatrolPoint()
     {
         Vector2 offset = Random.insideUnitCircle * patrolRadius;
         return startPosition + offset;
     }
-    void ChasePlayer()
+
+    void ChasePlayer(Vector2 toPlayer)
     {
         MoveTo(player.position);
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.flipX = toPlayer.x < 0;
+        }
     }
 
     void MoveTo(Vector2 target)
@@ -120,20 +139,35 @@ public class OrcAI : MonoBehaviour
         if (anim != null)
             anim.SetTrigger("Attack");
 
-        // ✅ Wait for wind-up
         yield return new WaitForSeconds(0.8f);
 
-        // ✅ Check distance again before applying damage
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        if (distanceToPlayer <= attackRange)
+        if (useHitboxAttack && attackHitbox != null)
         {
-            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-                playerHealth.TakeDamage(attackDamage);
+            attackHitbox.SetActive(true);
+        }
+        else
+        {
+            Vector2 toPlayer = player.position - transform.position;
+            float horizontalDist = Mathf.Abs(toPlayer.x);
+            float verticalDist = Mathf.Abs(toPlayer.y);
+
+            bool alignedHorizontally = horizontalDist <= attackRange;
+            bool verticallyClose = verticalDist <= verticalTolerance;
+
+            if (alignedHorizontally && verticallyClose)
+            {
+                PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+                if (playerHealth != null)
+                    playerHealth.TakeDamage(attackDamage);
+            }
         }
 
-        // Finish animation
         yield return new WaitForSeconds(attackDuration - 0.8f);
+
+        if (attackHitbox != null)
+        {
+            attackHitbox.SetActive(false);
+        }
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
@@ -153,5 +187,13 @@ public class OrcAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, attackRange);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, patrolRadius);
+
+        if (spriteRenderer != null)
+        {
+            Gizmos.color = Color.cyan;
+            Vector3 center = transform.position + Vector3.right * (spriteRenderer.flipX ? -1 : 1) * (attackRange / 2f);
+            Vector3 size = new Vector3(attackRange, verticalTolerance * 2f, 0.1f);
+            Gizmos.DrawWireCube(center, size);
+        }
     }
 }

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speakerName: Mira
   dialogueText: I'm still waiting for my parents to come back...
-  portrait: {fileID: 0}
+  portrait: {fileID: 21300000, guid: 99766a4df948474418ff7ed9f8cf6a55, type: 3}
   choices: []
   nextAutoNode: {fileID: 0}
