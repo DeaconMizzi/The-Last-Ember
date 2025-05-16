@@ -28,12 +28,11 @@ public class OrcAI : MonoBehaviour
     private enum State { Patrol, Chase }
     private State currentState = State.Patrol;
 
-    [Header("Attack Settings")]
-    public bool useHitboxAttack = false;
-    public GameObject attackHitbox;
-
     [Header("Directional Attack")]
     public float verticalTolerance = 0.5f;
+
+    [Header("Attack Hitbox")]
+    public GameObject attackHitbox; // Assigned in inspector
 
     void Start()
     {
@@ -79,9 +78,7 @@ public class OrcAI : MonoBehaviour
 
             ChasePlayer(toPlayer);
 
-            Debug.DrawLine(transform.position, player.position, Color.magenta);
-
-            if (alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
+            if (!isAttacking && alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
@@ -139,38 +136,30 @@ public class OrcAI : MonoBehaviour
         if (anim != null)
             anim.SetTrigger("Attack");
 
-        yield return new WaitForSeconds(0.8f);
-
-        if (useHitboxAttack && attackHitbox != null)
-        {
-            attackHitbox.SetActive(true);
-        }
-        else
-        {
-            Vector2 toPlayer = player.position - transform.position;
-            float horizontalDist = Mathf.Abs(toPlayer.x);
-            float verticalDist = Mathf.Abs(toPlayer.y);
-
-            bool alignedHorizontally = horizontalDist <= attackRange;
-            bool verticallyClose = verticalDist <= verticalTolerance;
-
-            if (alignedHorizontally && verticallyClose)
-            {
-                PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
-                    playerHealth.TakeDamage(attackDamage);
-            }
-        }
-
-        yield return new WaitForSeconds(attackDuration - 0.8f);
-
-        if (attackHitbox != null)
-        {
-            attackHitbox.SetActive(false);
-        }
+        yield return new WaitForSeconds(attackDuration);
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
+    }
+
+    // Called from animation event when hammer hits
+    public void EnableHitbox()
+    {
+        if (attackHitbox != null)
+        {
+            attackHitbox.SetActive(true);
+
+            var hitboxScript = attackHitbox.GetComponent<EnemyWeaponHitbox>();
+            if (hitboxScript != null)
+                hitboxScript.ResetHit();
+        }
+    }
+
+    // Called from animation event after slam impact
+    public void DisableHitbox()
+    {
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
     }
 
     public void ApplyKnockback(float duration)
@@ -188,12 +177,13 @@ public class OrcAI : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, patrolRadius);
 
-        if (spriteRenderer != null)
+        if (spriteRenderer != null && attackHitbox != null)
         {
             Gizmos.color = Color.cyan;
-            Vector3 center = transform.position + Vector3.right * (spriteRenderer.flipX ? -1 : 1) * (attackRange / 2f);
-            Vector3 size = new Vector3(attackRange, verticalTolerance * 2f, 0.1f);
-            Gizmos.DrawWireCube(center, size);
+            Vector3 center = attackHitbox.transform.position;
+            BoxCollider2D col = attackHitbox.GetComponent<BoxCollider2D>();
+            if (col != null)
+                Gizmos.DrawWireCube(center, col.size);
         }
     }
 }
