@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: VerdantEmber
   m_EditorClassIdentifier: 
   emberName: Verdant Ember
-  description: 
+  description: The Ember pulses with untamed life...
   icon: {fileID: 0}
   abilityGranted: 1
   worldEffectPrefab: {fileID: 0}

@@ -22,5 +22,5 @@ MonoBehaviour:
     consequenceID: ANGRY_GUARD
   - choiceText: Let the Ember flourish
     nextNode: {fileID: 0}
-    consequenceID: 
+    consequenceID: LEAVE_VERDANT_EMBER
   nextAutoNode: {fileID: 0}

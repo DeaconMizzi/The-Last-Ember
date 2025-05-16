@@ -139,7 +139,7 @@ public class DialogueManager : MonoBehaviour
     }
 
 
-   public void DisplayNode(DialogueNode node)
+    public void DisplayNode(DialogueNode node)
     {
         currentNode = node;
 
@@ -264,7 +264,7 @@ public class DialogueManager : MonoBehaviour
 
             return; // Prevent the rest of this method (which relies on currentNode)
         }
-        
+
 
         // Handle Node-Based Dialogue (standard NPC quests)
         if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
@@ -318,19 +318,32 @@ public class DialogueManager : MonoBehaviour
 
             if (!string.IsNullOrEmpty(choice.consequenceID))
             {
-                if (choice.consequenceID.StartsWith("GIVE_"))
+                switch (choice.consequenceID)
                 {
-                    string questID = choice.consequenceID.Substring(5);
-                    GiveQuestFromNPC(questID);
-                }
-                else if (choice.consequenceID == "ANGRY_GUARD")
-                {
-                    DisturbableNPC d = currentNPC?.GetComponent<DisturbableNPC>();
-                    d?.TriggerAttack();
-                }
-                else
-                {
-                    MemoryFlags.Set(choice.consequenceID);
+                    case "ANGRY_GUARD":
+                        DisturbableNPC d = currentNPC?.GetComponent<DisturbableNPC>();
+                        d?.TriggerAttack();
+                        break;
+
+                    case "TAKE_VERDANT_EMBER":
+                        StartCoroutine(PlayEmberClaimSequence());
+                        break;
+
+                    case "LEAVE_VERDANT_EMBER":
+                        EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Overgrown);
+                        break;
+
+                    default:
+                        if (choice.consequenceID.StartsWith("GIVE_"))
+                        {
+                            string questID = choice.consequenceID.Substring(5);
+                            GiveQuestFromNPC(questID);
+                        }
+                        else
+                        {
+                            MemoryFlags.Set(choice.consequenceID);
+                        }
+                        break;
                 }
             }
 
@@ -339,7 +352,7 @@ public class DialogueManager : MonoBehaviour
             else
                 EndDialogue();
         }
-                // Press Escape to exit dialogue during a choice node
+        // Press Escape to exit dialogue during a choice node
         if (currentChoices != null && currentChoices.Count > 0 && Input.GetKeyDown(KeyCode.Escape))
         {
             Debug.Log("Dialogue cancelled by player (Escape pressed).");
@@ -413,7 +426,7 @@ public class DialogueManager : MonoBehaviour
             {
                 questLog.UpdateQuestList();
             }
-}
+        }
     }
 
     private DialogueNode CreateFallbackNode(string speaker, string message)
@@ -541,4 +554,47 @@ public class DialogueManager : MonoBehaviour
 
         GameStateController.Instance?.SetDialogueState(false);
     }
+    
+    private IEnumerator PlayEmberClaimSequence()
+    {
+        Debug.Log("🔥 Playing Ember Claim Animation...");
+
+        // 1. Trigger camera shake — BEFORE the ember floats
+        CameraShaker shaker = GameObject.Find("CmCam")?.GetComponent<CameraShaker>();
+        if (shaker != null)
+        {
+            shaker.Shake(7f, 0.5f);
+        }
+        else
+        {
+            Debug.LogWarning("CameraShaker not found on CmCam.");
+        }
+
+        // 2. Trigger ember float + fade
+        GameObject ember = GameObject.FindWithTag("VerdantEmber");
+        if (ember != null)
+        {
+            EmberFloatEffect fx = ember.GetComponent<EmberFloatEffect>();
+            if (fx != null)
+            {
+                fx.PlayEffect();
+            }
+            else
+            {
+                Debug.LogWarning("EmberFloatEffect not found on Ember.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("VerdantEmber not found in scene.");
+        }
+
+        // 3. Wait for animation to finish
+        yield return new WaitForSeconds(1.7f);
+
+        // 4. Apply Ember ability + world shift
+        EmberManager.Instance.SetEmber(GameStateController.Instance.verdantEmberData, EmberData.WorldShiftType.Seeded);
+        Debug.Log("✅ Ember claimed. Bloomstep granted.");
+    }
+
 }

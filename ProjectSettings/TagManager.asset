@@ -10,6 +10,7 @@ TagManager:
   - Orc
   - Golem
   - EnemyAttack
+  - VerdantEmber
   layers:
   - Default
   - TransparentFX

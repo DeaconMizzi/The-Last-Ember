@@ -10,6 +10,9 @@ public class EnemyHealth : MonoBehaviour
     public EnemyType enemyType;
     private Animator animator;
 
+    [Header("Boss Flags")]
+    public bool isBranhalm = false;
+
     void Start()
     {
         currentHealth = maxHealth;
@@ -43,6 +46,12 @@ public class EnemyHealth : MonoBehaviour
     {
         Debug.Log($"{enemyType} died!");
         QuestManager.Instance.RegisterEnemyKill(enemyType);
+
+        if (isBranhalm)
+        {
+            MemoryFlags.Set("BRANHALM_DEFEATED");
+            Debug.Log("Branhalm defeated — MemoryFlag set.");
+        }
 
         if (animator != null)
         {

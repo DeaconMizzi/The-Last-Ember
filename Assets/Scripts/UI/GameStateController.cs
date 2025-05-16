@@ -8,6 +8,10 @@ public class GameStateController : MonoBehaviour
     public GameObject player;
     public GameObject healthUI;
     public GameObject[] enemies;
+    public EmberData verdantEmberData;
+    public EmberData wrathEmberData;
+    public EmberData dominionEmberData;
+
 
     void Awake()
     {

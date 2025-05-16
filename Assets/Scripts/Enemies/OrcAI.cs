@@ -7,8 +7,7 @@ public class OrcAI : MonoBehaviour
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
-    public float chaseRange = 5f;
-    public float attackRange = 1f;
+    public float chaseRange = 10f;
     public float attackCooldown = 1.5f;
     public float attackDuration = 0.6f;
     public int attackDamage = 1;
@@ -32,7 +31,11 @@ public class OrcAI : MonoBehaviour
     public float verticalTolerance = 0.5f;
 
     [Header("Attack Hitbox")]
-    public GameObject attackHitbox; // Assigned in inspector
+    public GameObject attackHitbox;
+
+    [Header("Attack Positioning")]
+    public float desiredAttackDistance = 6.4f;
+    public float distanceTolerance = 0.6f;
 
     void Start()
     {
@@ -73,13 +76,14 @@ public class OrcAI : MonoBehaviour
             float horizontalDist = Mathf.Abs(toPlayer.x);
             float verticalDist = Mathf.Abs(toPlayer.y);
 
-            bool alignedHorizontally = horizontalDist <= attackRange;
+            bool alignedHorizontally = horizontalDist <= desiredAttackDistance + distanceTolerance;
             bool verticallyClose = verticalDist <= verticalTolerance;
 
             ChasePlayer(toPlayer);
 
             if (!isAttacking && alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
+                Debug.Log("💥 Triggering attack!");
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
             }
@@ -108,11 +112,37 @@ public class OrcAI : MonoBehaviour
 
     void ChasePlayer(Vector2 toPlayer)
     {
-        MoveTo(player.position);
+        Vector2 direction = player.position - transform.position;
+        float horizontalDistance = Mathf.Abs(direction.x);
+        float moveDir = Mathf.Sign(direction.x);
+        Vector2 targetPos = new Vector2(player.position.x - moveDir * desiredAttackDistance, transform.position.y);
 
+        if (horizontalDistance > desiredAttackDistance + distanceTolerance ||
+            horizontalDistance < desiredAttackDistance - distanceTolerance)
+        {
+            MoveTo(targetPos);
+        }
+        else
+        {
+            rb.velocity = Vector2.zero;
+        }
+
+        // Flip sprite
         if (spriteRenderer != null)
         {
-            spriteRenderer.flipX = toPlayer.x < 0;
+            spriteRenderer.flipX = direction.x < 0;
+        }
+
+        // Flip attack hitbox to match facing
+        if (attackHitbox != null)
+        {
+            Vector3 scale = attackHitbox.transform.localScale;
+            scale.x = spriteRenderer.flipX ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
+            attackHitbox.transform.localScale = scale;
+
+            // Optionally offset hitbox position
+            Vector3 offset = new Vector3(1f, 0f, 0f); // adjust if needed
+            attackHitbox.transform.localPosition = spriteRenderer.flipX ? -offset : offset;
         }
     }
 
@@ -129,7 +159,6 @@ public class OrcAI : MonoBehaviour
     IEnumerator AttackRoutine()
     {
         isAttacking = true;
-
         rb.velocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
 
@@ -142,7 +171,6 @@ public class OrcAI : MonoBehaviour
         isAttacking = false;
     }
 
-    // Called from animation event when hammer hits
     public void EnableHitbox()
     {
         if (attackHitbox != null)
@@ -155,7 +183,6 @@ public class OrcAI : MonoBehaviour
         }
     }
 
-    // Called from animation event after slam impact
     public void DisableHitbox()
     {
         if (attackHitbox != null)
@@ -172,10 +199,15 @@ public class OrcAI : MonoBehaviour
     {
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, chaseRange);
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, patrolRadius);
+
+        Gizmos.color = Color.magenta;
+        Vector3 idealLeft = transform.position + Vector3.left * desiredAttackDistance;
+        Vector3 idealRight = transform.position + Vector3.right * desiredAttackDistance;
+        Gizmos.DrawLine(transform.position, idealLeft);
+        Gizmos.DrawLine(transform.position, idealRight);
 
         if (spriteRenderer != null && attackHitbox != null)
         {

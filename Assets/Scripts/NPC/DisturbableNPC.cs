@@ -25,7 +25,20 @@ public class DisturbableNPC : MonoBehaviour
     {
         yield return new WaitForSeconds(delayBeforeAttack);
 
-        Instantiate(enemyPrefab, transform.position, Quaternion.identity);
+        GameObject enemy = Instantiate(enemyPrefab, transform.position, Quaternion.identity);
+
+        StartCoroutine(SetBranhalmDefeatedAfter(enemy, 0.1f));
+
         Destroy(gameObject);
+    }
+    
+    private IEnumerator SetBranhalmDefeatedAfter(GameObject enemy, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // Wait until the enemy is destroyed (meaning it died)
+        yield return new WaitUntil(() => enemy == null);
+
+        MemoryFlags.Set("BRANHALM_DEFEATED");
     }
 }
