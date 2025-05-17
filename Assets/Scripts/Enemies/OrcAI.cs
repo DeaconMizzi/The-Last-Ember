@@ -37,6 +37,8 @@ public class OrcAI : MonoBehaviour
     public float desiredAttackDistance = 6.4f;
     public float distanceTolerance = 0.6f;
 
+    private Vector3 baseHitboxOffset;
+
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -47,6 +49,9 @@ public class OrcAI : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player").transform;
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+
+        if (attackHitbox != null)
+            baseHitboxOffset = attackHitbox.transform.localPosition;
     }
 
     void Update()
@@ -114,11 +119,17 @@ public class OrcAI : MonoBehaviour
     {
         Vector2 direction = player.position - transform.position;
         float horizontalDistance = Mathf.Abs(direction.x);
+        float verticalDistance = Mathf.Abs(direction.y);
         float moveDir = Mathf.Sign(direction.x);
-        Vector2 targetPos = new Vector2(player.position.x - moveDir * desiredAttackDistance, transform.position.y);
+
+        Vector2 targetPos = new Vector2(
+            player.position.x - moveDir * desiredAttackDistance,
+            player.position.y
+        );
 
         if (horizontalDistance > desiredAttackDistance + distanceTolerance ||
-            horizontalDistance < desiredAttackDistance - distanceTolerance)
+            horizontalDistance < desiredAttackDistance - distanceTolerance ||
+            verticalDistance > verticalTolerance)
         {
             MoveTo(targetPos);
         }
@@ -133,16 +144,18 @@ public class OrcAI : MonoBehaviour
             spriteRenderer.flipX = direction.x < 0;
         }
 
-        // Flip attack hitbox to match facing
+        // Flip hitbox
         if (attackHitbox != null)
         {
+            // Flip scale
             Vector3 scale = attackHitbox.transform.localScale;
             scale.x = spriteRenderer.flipX ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
             attackHitbox.transform.localScale = scale;
 
-            // Optionally offset hitbox position
-            Vector3 offset = new Vector3(1f, 0f, 0f); // adjust if needed
-            attackHitbox.transform.localPosition = spriteRenderer.flipX ? -offset : offset;
+            // Flip position X, preserve Y and Z from prefab
+            Vector3 flippedOffset = baseHitboxOffset;
+            flippedOffset.x = spriteRenderer.flipX ? -Mathf.Abs(baseHitboxOffset.x) : Mathf.Abs(baseHitboxOffset.x);
+            attackHitbox.transform.localPosition = flippedOffset;
         }
     }
 

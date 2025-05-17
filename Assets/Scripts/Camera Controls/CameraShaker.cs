@@ -25,7 +25,11 @@ public class CameraShaker : MonoBehaviour
 
     public void Shake(float duration, float amplitude)
     {
-        if (noise == null) return;
+        if (noise == null)
+        {
+            Debug.LogWarning("CameraShaker: No noise component found.");
+            return;
+        }
 
         noise.m_AmplitudeGain = amplitude;
         noise.m_FrequencyGain = 2f;
@@ -45,5 +49,3 @@ public class CameraShaker : MonoBehaviour
         }
     }
 }
-
-

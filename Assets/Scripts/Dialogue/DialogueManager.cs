@@ -31,6 +31,8 @@ public class DialogueManager : MonoBehaviour
     private Coroutine typingCoroutine = null;
 
     private NPC currentNPC;
+    public GridOvergrowthManager overgrowthManager;
+
 
     private void Awake()
     {
@@ -331,6 +333,11 @@ public class DialogueManager : MonoBehaviour
 
                     case "LEAVE_VERDANT_EMBER":
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Overgrown);
+
+                        GridOvergrowthManager overgrowth = FindObjectOfType<GridOvergrowthManager>();
+                        if (overgrowth != null)
+                            overgrowth.ActivateOvergrowth();
+
                         break;
 
                     default:

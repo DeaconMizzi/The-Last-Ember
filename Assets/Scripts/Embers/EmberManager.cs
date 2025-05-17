@@ -17,15 +17,26 @@ public class EmberManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    /// <summary>
+    /// Assigns an ember and triggers its effects. If the ember is null, only the world shift will occur.
+    /// </summary>
     public void SetEmber(EmberData ember, EmberData.WorldShiftType shift)
     {
         currentEmber = ember;
-        ApplyAbility(ember.abilityGranted);
+
+        if (ember != null)
+            ApplyAbility(ember.abilityGranted);
+
         ApplyWorldChange(shift);
     }
 
+    /// <summary>
+    /// Applies the ability granted by the ember to the player.
+    /// </summary>
     void ApplyAbility(EmberData.AbilityType ability)
     {
+        if (player == null) return;
+
         var abilities = player.GetComponent<PlayerAbilities>();
         if (abilities == null) return;
 
@@ -43,26 +54,28 @@ public class EmberManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Applies environmental changes associated with the ember's world shift type.
+    /// </summary>
     void ApplyWorldChange(EmberData.WorldShiftType shift)
     {
-        // Placeholder: add your visual/environment logic here.
         switch (shift)
         {
             case EmberData.WorldShiftType.Overgrown:
-                Debug.Log("World becomes overgrown.");
+                Debug.Log("🌿 World becomes overgrown.");
                 break;
             case EmberData.WorldShiftType.Seeded:
-                Debug.Log("World gently regrows.");
+                Debug.Log("🌱 World gently regrows.");
                 break;
             case EmberData.WorldShiftType.Extinguished:
-                Debug.Log("The land cools and settles.");
+                Debug.Log("🕯️ The land cools and settles.");
                 break;
             case EmberData.WorldShiftType.Reforged:
-                Debug.Log("The world stabilizes with strength.");
+                Debug.Log("🛠️ The world stabilizes with strength.");
                 break;
         }
 
-        if (currentEmber.worldEffectPrefab != null)
+        if (currentEmber != null && currentEmber.worldEffectPrefab != null)
         {
             Instantiate(currentEmber.worldEffectPrefab, player.transform.position, Quaternion.identity);
         }

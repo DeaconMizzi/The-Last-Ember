@@ -14,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
 
     private float lastMoveX = 0f;
     private float lastMoveY = -1f; // Facing down initially
+    public bool isStunned = false;
 
     void Start()
     {
@@ -35,11 +36,11 @@ public class PlayerMovement : MonoBehaviour
             moveInput.y = Input.GetAxisRaw("Vertical");
             moveVelocity = moveInput.normalized * moveSpeed;
 
-            
+
         }
-        
+
         bool isMoving = moveInput.sqrMagnitude > 0.1f;
-        
+
         if (isMoving)
         {
             lastMoveX = moveInput.x;
@@ -57,5 +58,22 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.MovePosition(rb.position + moveVelocity * Time.fixedDeltaTime);
         }
+    }
+    
+    public void ApplyStun(float duration)
+    {
+        if (!isStunned)
+            StartCoroutine(StunRoutine(duration));
+    }
+
+    IEnumerator StunRoutine(float duration)
+    {
+        isStunned = true;
+        canMove = false;
+
+        yield return new WaitForSeconds(duration);
+
+        canMove = true;
+        isStunned = false;
     }
 }
