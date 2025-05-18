@@ -53,14 +53,23 @@ public class EnemyHealth : MonoBehaviour
             Debug.Log("Branhalm defeated — MemoryFlag set.");
         }
 
+        // Trigger animator death animation
         if (animator != null)
         {
             animator.SetTrigger("Death");
         }
 
-        // Disable AI
-        OrcAI ai = GetComponent<OrcAI>();
-        if (ai != null) ai.enabled = false;
+        // Disable AI (for Orcs)
+        OrcAI orcAI = GetComponent<OrcAI>();
+        if (orcAI != null) orcAI.enabled = false;
+
+        // Disable AI (for Skeletons)
+        SkeletonAI skeletonAI = GetComponent<SkeletonAI>();
+        if (skeletonAI != null)
+        {
+            skeletonAI.PlayDeathAnimation();
+            return; // Let SkeletonAI handle the destroy
+        }
 
         // Disable collider
         Collider2D col = GetComponent<Collider2D>();
@@ -78,4 +87,5 @@ public class EnemyHealth : MonoBehaviour
         // Destroy after delay to allow death animation
         Destroy(gameObject, 1.5f);
     }
+
 }

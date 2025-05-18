@@ -52,4 +52,19 @@ public class MapTransition : MonoBehaviour
         }
         player.transform.position = newPos;
     }
+    public void ForceTransition(GameObject player)
+    {
+        if (player == null) return;
+
+        if (confiner != null && mapBoundry != null)
+            confiner.m_BoundingShape2D = mapBoundry;
+
+        UpdatePlayerPosition(player);
+
+        if (areaNamePopup != null && !string.IsNullOrEmpty(areaName))
+            areaNamePopup.ShowAreaName(areaName);
+
+        MapController_Manual.Instance?.HighlightArea(mapBoundry.name);
+        MapController_Dynamic.Instance?.UpdateCurrentArea(mapBoundry.name);
+    }
 }
