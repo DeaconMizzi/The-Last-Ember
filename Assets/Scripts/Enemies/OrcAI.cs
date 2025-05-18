@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class OrcAI : MonoBehaviour
+public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -230,5 +230,37 @@ public class OrcAI : MonoBehaviour
             if (col != null)
                 Gizmos.DrawWireCube(center, col.size);
         }
+    }
+    public void ApplyReforgedScaling()
+    {
+        attackDamage += 1;
+
+        var health = GetComponent<EnemyHealth>();
+        if (health != null)
+        {
+            health.maxHealth += 2;
+            health.currentHealth += 2;
+        }
+    }
+    private bool isStunned = false;
+
+    public void Stun(float duration)
+    {
+        if (!isStunned)
+            StartCoroutine(StunRoutine(duration));
+    }
+
+    private IEnumerator StunRoutine(float duration)
+    {
+        isStunned = true;
+        rb.velocity = Vector2.zero;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        if (anim != null)
+            anim.SetBool("IsWalking", false);
+
+        yield return new WaitForSeconds(duration);
+
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        isStunned = false;
     }
 }

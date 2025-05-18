@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class SkeletonAI : MonoBehaviour
+public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -39,6 +39,12 @@ public class SkeletonAI : MonoBehaviour
 
     private Vector3 baseHitboxOffset;
 
+    // --- Curve-based movement additions ---
+    private bool isCircling = false;
+    private float circleAngle = 0f;
+    public float circleSpeed = 1.5f;
+    public float circleRadius = 2f;
+
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -57,7 +63,24 @@ public class SkeletonAI : MonoBehaviour
     void Update()
     {
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        currentState = (distanceToPlayer <= chaseRange) ? State.Chase : State.Patrol;
+        State newState = (distanceToPlayer <= chaseRange) ? State.Chase : State.Patrol;
+
+        // Reset circling when leaving chase
+        if (newState != State.Chase && isCircling)
+        {
+            isCircling = false;
+            circleAngle = 0f;
+        }
+
+        // Start circling
+        if (newState == State.Chase && !isCircling)
+        {
+            Vector2 dir = (transform.position - player.position).normalized;
+            circleAngle = Mathf.Atan2(dir.y, dir.x); // angle in radians
+            isCircling = true;
+        }
+
+        currentState = newState;
 
         if (anim != null)
             anim.SetBool("IsWalking", currentState == State.Patrol || currentState == State.Chase);
@@ -117,57 +140,23 @@ public class SkeletonAI : MonoBehaviour
 
     void ChasePlayer(Vector2 toPlayer)
     {
-        float horizontalDistance = Mathf.Abs(toPlayer.x);
-        float verticalDistance = Mathf.Abs(toPlayer.y);
+        if (!isCircling) return;
 
-        // Sprite direction determines flank direction
-        bool facingLeft = spriteRenderer != null && spriteRenderer.flipX;
-        float flankDir = facingLeft ? 1f : -1f;
+        // Step around the player in a circular arc
+        circleAngle += circleSpeed * Time.fixedDeltaTime;
 
-        // Desired position to attack from (flanking around player)
-        Vector2 desiredPosition = new Vector2(
-            player.position.x + flankDir * desiredAttackDistance,
-            player.position.y
+        Vector2 orbitPos = new Vector2(
+            player.position.x + Mathf.Cos(circleAngle) * circleRadius,
+            player.position.y + Mathf.Sin(circleAngle) * circleRadius
         );
 
-        // Check if we're already on the correct side (flanked)
-        bool onCorrectFlankSide = (flankDir > 0 && transform.position.x > player.position.x) ||
-                                (flankDir < 0 && transform.position.x < player.position.x);
+        MoveTo(orbitPos);
 
-        // Step 1: Move to correct flank side first
-        if (!onCorrectFlankSide)
-        {
-            Vector2 target = new Vector2(player.position.x + flankDir * desiredAttackDistance, transform.position.y);
-            MoveTo(target);
-            return;
-        }
-
-        // Step 2: Align vertically
-        if (verticalDistance > verticalTolerance)
-        {
-            Vector2 target = new Vector2(transform.position.x, player.position.y);
-            MoveTo(target);
-            return;
-        }
-
-        // Step 3: Move into final attack position (if not already)
-        float closeEnough = distanceTolerance;
-        if (Vector2.Distance(transform.position, desiredPosition) > closeEnough)
-        {
-            MoveTo(desiredPosition);
-        }
-        else
-        {
-            rb.velocity = Vector2.zero;
-        }
-
-        // Sprite facing update
+        // Flip sprite for facing
         if (spriteRenderer != null)
-        {
-            spriteRenderer.flipX = toPlayer.x < 0;
-        }
+            spriteRenderer.flipX = (player.position.x < transform.position.x);
 
-        // Hitbox flip logic
+        // Flip and offset hitbox
         if (attackHitbox != null)
         {
             Vector3 scale = attackHitbox.transform.localScale;
@@ -258,31 +247,35 @@ public class SkeletonAI : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
         }
 
-        // Optionally disable the AI logic after a delay
         StartCoroutine(HandleDeath());
     }
 
     private IEnumerator HandleDeath()
     {
-        yield return new WaitForSeconds(1.2f); // Match death animation time
-        Destroy(gameObject); // Or pool/disable instead
+        yield return new WaitForSeconds(1.2f);
+        Destroy(gameObject); // Or disable for pooling
     }
 
     void OnDrawGizmosSelected()
     {
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, chaseRange);
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, patrolRadius);
 
+        // Attack position lines
         Gizmos.color = Color.magenta;
         Vector3 idealLeft = transform.position + Vector3.left * desiredAttackDistance;
         Vector3 idealRight = transform.position + Vector3.right * desiredAttackDistance;
         Gizmos.DrawLine(transform.position, idealLeft);
         Gizmos.DrawLine(transform.position, idealRight);
 
-        if (spriteRenderer != null && attackHitbox != null)
+        // Hitbox
+        if (attackHitbox != null)
         {
             Gizmos.color = Color.cyan;
             Vector3 center = attackHitbox.transform.position;
@@ -290,5 +283,80 @@ public class SkeletonAI : MonoBehaviour
             if (col != null)
                 Gizmos.DrawWireCube(center, col.size);
         }
+
+#if UNITY_EDITOR
+        // Try to find player if not set
+        if (player == null)
+        {
+            GameObject found = GameObject.FindGameObjectWithTag("Player");
+            if (found != null) player = found.transform;
+        }
+
+        if (player != null)
+        {
+            // Orbit circle
+            Gizmos.color = new Color(1f, 0.5f, 0f, 0.7f);
+            const int segments = 32;
+            Vector3 lastPoint = player.position + new Vector3(Mathf.Cos(0) * circleRadius, Mathf.Sin(0) * circleRadius, 0);
+            for (int i = 1; i <= segments; i++)
+            {
+                float theta = i * Mathf.PI * 2f / segments;
+                Vector3 nextPoint = player.position + new Vector3(Mathf.Cos(theta) * circleRadius, Mathf.Sin(theta) * circleRadius, 0);
+                Gizmos.DrawLine(lastPoint, nextPoint);
+                lastPoint = nextPoint;
+            }
+
+            // Target orbit point
+            Gizmos.color = Color.red;
+            Vector3 target = player.position + new Vector3(Mathf.Cos(circleAngle), Mathf.Sin(circleAngle), 0) * circleRadius;
+            Gizmos.DrawSphere(target, 0.1f);
+
+            // Attack distance
+            Gizmos.color = Color.white;
+            Gizmos.DrawWireSphere(player.position, desiredAttackDistance);
+
+            // Vertical tolerance band
+            Gizmos.color = new Color(0f, 0.8f, 1f, 0.4f);
+            float yMin = player.position.y - verticalTolerance;
+            float yMax = player.position.y + verticalTolerance;
+            Vector3 bandStart = new Vector3(player.position.x - desiredAttackDistance * 2, yMin, 0);
+            Vector3 bandEnd = new Vector3(player.position.x + desiredAttackDistance * 2, yMax, 0);
+            Gizmos.DrawLine(new Vector3(bandStart.x, yMin, 0), new Vector3(bandEnd.x, yMin, 0));
+            Gizmos.DrawLine(new Vector3(bandStart.x, yMax, 0), new Vector3(bandEnd.x, yMax, 0));
+        }
+#endif
     }
+    public void ApplyReforgedScaling()
+    {
+        attackDamage += 1;
+
+        var health = GetComponent<EnemyHealth>();
+        if (health != null)
+        {
+            health.maxHealth += 2;
+            health.currentHealth += 2;
+        }
+    }
+    private bool isStunned = false;
+
+    public void Stun(float duration)
+    {
+        if (!isStunned)
+            StartCoroutine(StunRoutine(duration));
+    }
+
+    private IEnumerator StunRoutine(float duration)
+    {
+        isStunned = true;
+        rb.velocity = Vector2.zero;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        if (anim != null)
+            anim.SetBool("IsWalking", false);
+
+        yield return new WaitForSeconds(duration);
+
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        isStunned = false;
+    }
+
 }

@@ -292,10 +292,12 @@ MonoBehaviour:
   attackCooldown: 1
   attackDuration: 1.6
   attackDamage: 1
-  verticalTolerance: 0.5
+  verticalTolerance: 0.25
   attackHitbox: {fileID: 248696432093397678}
-  desiredAttackDistance: 0.22
-  distanceTolerance: 0.6
+  desiredAttackDistance: 0.4
+  distanceTolerance: 0.5
+  circleSpeed: 1.3
+  circleRadius: 1
 --- !u!114 &5139689507585038058
 MonoBehaviour:
   m_ObjectHideFlags: 0

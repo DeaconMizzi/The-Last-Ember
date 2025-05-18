@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class EnemyBranhalm : MonoBehaviour
+public class EnemyBranhalm : MonoBehaviour, IDominionScalable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -110,7 +110,7 @@ public class EnemyBranhalm : MonoBehaviour
         return startPosition + offset;
     }
 
-   void ChasePlayer(Vector2 toPlayer)
+    void ChasePlayer(Vector2 toPlayer)
     {
         Vector2 direction = player.position - transform.position;
         float horizontalDistance = Mathf.Abs(direction.x);
@@ -222,4 +222,17 @@ public class EnemyBranhalm : MonoBehaviour
                 Gizmos.DrawWireCube(center, col.size);
         }
     }
+    
+    public void ApplyReforgedScaling()
+    {
+        attackDamage += 1;
+
+        var health = GetComponent<EnemyHealth>();
+        if (health != null)
+        {
+            health.maxHealth += 2;
+            health.currentHealth += 2;
+        }
+    }
+
 }

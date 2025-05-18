@@ -340,6 +340,17 @@ public class DialogueManager : MonoBehaviour
 
                         break;
 
+                    case "TAKE_DOMINION_EMBER":
+                        MemoryFlags.Set("TAKE_DOMINION_EMBER");
+                        StartCoroutine(PlayDominionEmberClaimSequence());
+                        break;
+
+                    case "LEAVE_DOMINION_EMBER":
+                        MemoryFlags.Set("LEAVE_DOMINION_EMBER");
+                        EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Reforged);
+                        break;
+
+
                     default:
                         if (choice.consequenceID.StartsWith("GIVE_"))
                         {
@@ -602,6 +613,47 @@ public class DialogueManager : MonoBehaviour
         // 4. Apply Ember ability + world shift
         EmberManager.Instance.SetEmber(GameStateController.Instance.verdantEmberData, EmberData.WorldShiftType.Seeded);
         Debug.Log("✅ Ember claimed. Bloomstep granted.");
+    }
+    private IEnumerator PlayDominionEmberClaimSequence()
+    {
+        Debug.Log("🔥 Playing Dominion Ember Claim Animation...");
+
+        // 1. Camera shake
+        CameraShaker shaker = GameObject.Find("CmCam")?.GetComponent<CameraShaker>();
+        if (shaker != null)
+        {
+            shaker.Shake(7f, 0.5f);
+        }
+        else
+        {
+            Debug.LogWarning("CameraShaker not found on CmCam.");
+        }
+
+        // 2. Find Dominion Ember in scene
+        GameObject ember = GameObject.FindWithTag("DominionEmber");
+        if (ember != null)
+        {
+            EmberFloatEffect fx = ember.GetComponent<EmberFloatEffect>();
+            if (fx != null)
+            {
+                fx.PlayEffect();
+            }
+            else
+            {
+                Debug.LogWarning("EmberFloatEffect not found on Dominion Ember.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("DominionEmber not found in scene.");
+        }
+
+        // 3. Wait for visual effect
+        yield return new WaitForSeconds(1.7f);
+
+        // 4. Grant command pulse
+        EmberManager.Instance.SetEmber(GameStateController.Instance.dominionEmberData, EmberData.WorldShiftType.Default);
+        Debug.Log("✅ Dominion Ember claimed. Command Pulse granted.");
     }
 
     private IEnumerator DelayedQuestUIUpdate()

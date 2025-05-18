@@ -19,8 +19,8 @@ MonoBehaviour:
   choices:
   - choiceText: Take the Ember
     nextNode: {fileID: 11400000, guid: 18598c94c10dcbe489995097aa4311a5, type: 2}
-    consequenceID: TAKE_VERDANT_EMBER
-  - choiceText: Step back and let it grow
+    consequenceID: TAKE_DOMINION_EMBER
+  - choiceText: Let it take over
     nextNode: {fileID: 11400000, guid: 3069a02d1aa20a14f9f7ac24faf18495, type: 2}
-    consequenceID: LEAVE_VERDANT_EMBER
+    consequenceID: LEAVE_DOMINION_EMBER
   nextAutoNode: {fileID: 0}

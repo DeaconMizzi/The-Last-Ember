@@ -9,14 +9,33 @@ public class PlayerAbilities : MonoBehaviour
     public Vector2 flowerSpawnOffset = new Vector2(0f, -0.5f); // align to feet
     private bool canBloomstep = false;
     private bool bloomstepOnCooldown = false;
+    private CameraShaker cameraShaker;
+
 
     [Header("Command Pulse")]
     private bool hasCommandPulse = false;
     private bool pulseOnCooldown = false;
 
+    [Header("Command Pulse Settings")]
+    public float pulseRadius = 2f;
+    public float stunDuration = 1.5f;
+    public LayerMask enemyLayer;
+    public GameObject pulseVFXPrefab;
+
+
     [Header("Flame Guard")]
     private bool hasFlameGuard = false;
+    [Header("Pulse FX")]
+    public GameObject dustFX; // Assign in Inspector (should be disabled by default)
+    public Vector3 dustFXPosition = new Vector3(-0.278f, -0.901f, 0f); // Your target position
 
+
+    void Start()
+    {
+        cameraShaker = GameObject.Find("CmCam")?.GetComponent<CameraShaker>();
+        if (cameraShaker == null)
+            Debug.LogWarning("CameraShaker not found on CmCam.");
+    }
     void Update()
     {
         HandleBloomstep();
@@ -134,15 +153,48 @@ public class PlayerAbilities : MonoBehaviour
         yield return new WaitForSeconds(duration);
         bloomstepOnCooldown = false;
     }
-
-    // ===== Command Pulse Logic =====
     void HandleCommandPulse()
     {
-        if (!hasCommandPulse || pulseOnCooldown) return;
-
-        if (Input.GetKeyDown(KeyCode.E))
+        if (!hasCommandPulse || pulseOnCooldown)
         {
+            return;
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            if (cameraShaker != null)
+            {
+                cameraShaker.Shake(6f, 0.3f); // Adjust strength & duration as needed
+            }
             Debug.Log("⚡ Command Pulse Activated!");
+
+            // 1. Optional: VFX prefab instantiate
+            if (pulseVFXPrefab != null)
+            {
+                Instantiate(pulseVFXPrefab, transform.position, Quaternion.identity);
+            }
+
+            // 2. Enable and position dustFX if assigned
+            if (dustFX != null)
+            {
+                dustFX.transform.position = transform.position + dustFXPosition;
+                dustFX.SetActive(true);
+                StartCoroutine(DisableFXAfterDelay(dustFX, 0.7f)); // Adjust delay to match animation length
+            }
+
+            // 3. Stun nearby enemies
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pulseRadius, enemyLayer);
+            foreach (Collider2D hit in hits)
+            {
+                IStunnable target = hit.GetComponent<IStunnable>();
+                if (target != null)
+                {
+                    target.Stun(stunDuration);
+                    Debug.Log($"⚡ Stunned: {hit.name}");
+                }
+            }
+
             StartCoroutine(PulseCooldown(5f));
         }
     }
@@ -152,5 +204,19 @@ public class PlayerAbilities : MonoBehaviour
         pulseOnCooldown = true;
         yield return new WaitForSeconds(duration);
         pulseOnCooldown = false;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (hasCommandPulse)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(transform.position, pulseRadius);
+        }
+    }
+    private IEnumerator DisableFXAfterDelay(GameObject fx, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        fx.SetActive(false);
     }
 }

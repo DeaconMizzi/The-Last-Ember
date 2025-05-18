@@ -1,17 +1,27 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
     private Animator animator;
     private float attackCooldownTimer = 0f;
+    private Vector2 lastMoveDir = Vector2.down; // Default direction
 
     public bool canAttack = true;
+
     [Header("Attack Settings")]
-    public float attackRange = 1f;
+    public float attackCooldown = 0.8f;
+    public float hitboxActiveTime = 0.2f;
     public int attackDamage = 1;
-    public float attackCooldown = 0.8f; // Adjust to match your animation length
+    public float knockbackForce = 5f;
+
+    [Header("Directional Hitboxes")]
+    public GameObject hitboxUp;
+    public GameObject hitboxDown;
+    public GameObject hitboxLeft;
+    public GameObject hitboxRight;
+
+    private GameObject currentActiveHitbox;
 
     void Start()
     {
@@ -21,52 +31,99 @@ public class PlayerCombat : MonoBehaviour
     void Update()
     {
         if (!canAttack)
-        return;
+            return;
+
+        // Track last movement direction
+        Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        if (moveInput != Vector2.zero)
+            lastMoveDir = moveInput.normalized;
+
         // Cooldown countdown
         if (attackCooldownTimer > 0f)
-        {
             attackCooldownTimer -= Time.deltaTime;
-        }
 
-        // Attack input
         if (Input.GetKeyDown(KeyCode.Space) && attackCooldownTimer <= 0f)
         {
-            Attack();
+            TriggerAttack();
         }
     }
 
-    void Attack()
+    void TriggerAttack()
     {
         animator.SetTrigger("Attack");
         attackCooldownTimer = attackCooldown;
+
+        Vector2 dir = lastMoveDir;
+
+        // Disable all hitboxes first
+        hitboxUp.SetActive(false);
+        hitboxDown.SetActive(false);
+        hitboxLeft.SetActive(false);
+        hitboxRight.SetActive(false);
+
+        if (dir.y > 0)
+            currentActiveHitbox = hitboxUp;
+        else if (dir.y < 0)
+            currentActiveHitbox = hitboxDown;
+        else if (dir.x < 0)
+            currentActiveHitbox = hitboxLeft;
+        else
+            currentActiveHitbox = hitboxRight;
+
+        if (currentActiveHitbox != null)
+            currentActiveHitbox.SetActive(true);
+
+        StartCoroutine(DisableHitboxAfterDelay(hitboxActiveTime));
     }
 
+    private IEnumerator DisableHitboxAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        hitboxUp.SetActive(false);
+        hitboxDown.SetActive(false);
+        hitboxLeft.SetActive(false);
+        hitboxRight.SetActive(false);
+        currentActiveHitbox = null;
+    }
+
+    // Animation event trigger
     public void DealDamage()
     {
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(transform.position, attackRange);
+        if (currentActiveHitbox == null)
+        {
+            Debug.LogWarning("No active hitbox during DealDamage call.");
+            return;
+        }
 
-        foreach (Collider2D enemy in hitEnemies)
+        Collider2D[] hits = Physics2D.OverlapBoxAll(currentActiveHitbox.transform.position,
+                                                    currentActiveHitbox.GetComponent<BoxCollider2D>().size,
+                                                    0f);
+
+        foreach (Collider2D enemy in hits)
         {
             if (enemy.CompareTag("Enemy"))
             {
                 Debug.Log("Hit enemy: " + enemy.name);
 
-                // Calculate knockback direction: from player to enemy
-                Vector2 knockbackDirection = enemy.transform.position - transform.position;
-                float knockbackForce = 5f; // you can tweak this per weapon or attack
+                Vector2 knockbackDir = (enemy.transform.position - transform.position).normalized;
+                EnemyHealth health = enemy.GetComponent<EnemyHealth>();
 
-                EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
-                if (enemyHealth != null)
-                {
-                    enemyHealth.TakeDamage(attackDamage, knockbackDirection, knockbackForce);
-                }
+                if (health != null)
+                    health.TakeDamage(attackDamage, knockbackDir, knockbackForce);
             }
         }
     }
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        if (hitboxUp != null)
+            Gizmos.DrawWireCube(hitboxUp.transform.position, hitboxUp.GetComponent<BoxCollider2D>().size);
+        if (hitboxDown != null)
+            Gizmos.DrawWireCube(hitboxDown.transform.position, hitboxDown.GetComponent<BoxCollider2D>().size);
+        if (hitboxLeft != null)
+            Gizmos.DrawWireCube(hitboxLeft.transform.position, hitboxLeft.GetComponent<BoxCollider2D>().size);
+        if (hitboxRight != null)
+            Gizmos.DrawWireCube(hitboxRight.transform.position, hitboxRight.GetComponent<BoxCollider2D>().size);
     }
 }
