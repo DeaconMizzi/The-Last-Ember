@@ -4,15 +4,38 @@ using UnityEngine;
 
 public class TeleportTrigger : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public Transform teleportTarget; // Where to send the player
+    public KeyCode interactKey = KeyCode.E;
 
-    // Update is called once per frame
+    private bool playerInZone = false;
+
     void Update()
     {
-        
+        if (playerInZone && Input.GetKeyDown(interactKey))
+        {
+            StartCoroutine(FadeAndTeleport());
+        }
+    }
+
+    IEnumerator FadeAndTeleport()
+    {
+        yield return FadeController.Instance.FadeOutIn(() =>
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null && teleportTarget != null)
+                player.transform.position = teleportTarget.position;
+        });
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+            playerInZone = true;
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+            playerInZone = false;
     }
 }
