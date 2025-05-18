@@ -26,7 +26,6 @@ public class GridOvergrowthManager : MonoBehaviour
 
         if (isOvergrown) return;
 
-        if (wildernessGrid != null) wildernessGrid.SetActive(false);
         if (natureParticles != null)
              natureParticles.SetActive(true);
         if (overgrownGrid != null) overgrownGrid.SetActive(true);

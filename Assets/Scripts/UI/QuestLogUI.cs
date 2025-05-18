@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class QuestLogUI : MonoBehaviour
 {
@@ -8,15 +9,15 @@ public class QuestLogUI : MonoBehaviour
     public GameObject questLogPage;
     public TMP_Text questText;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance == null)
             Instance = this;
         else
-            Destroy(gameObject); // Prevent duplicate UIs
+            Destroy(gameObject);
     }
 
-    void Update()
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Tab))
         {
@@ -24,8 +25,20 @@ public class QuestLogUI : MonoBehaviour
             questLogPage.SetActive(isActive);
 
             if (isActive)
-                UpdateQuestList();
+                StartCoroutine(DelayedQuestUpdate());
         }
+    }
+
+    private IEnumerator DelayedQuestUpdate()
+    {
+        yield return new WaitForEndOfFrame(); // Ensures QuestManager.Instance is ready
+        if (QuestManager.Instance == null)
+        {
+            questText.text = "<i>Loading quests...</i>";
+            yield break;
+        }
+
+        UpdateQuestList();
     }
 
     public void UpdateQuestList()
@@ -58,16 +71,23 @@ public class QuestLogUI : MonoBehaviour
                 switch (obj.type)
                 {
                     case ObjectiveType.KillTarget:
-                        objDesc = $"Kill {obj.targetID}: {obj.currentCount}/{obj.requiredCount}";
+                        objDesc = $"Defeat {obj.targetID}: {obj.currentCount}/{obj.requiredCount}";
                         break;
                     case ObjectiveType.CollectItem:
                         objDesc = $"Collect {obj.targetID}: {obj.currentCount}/{obj.requiredCount}";
                         break;
                     case ObjectiveType.ReachArea:
-                        objDesc = $"Reach {obj.targetID}: {(obj.IsComplete ? "✔" : "❌")}";
+                        string areaName = obj.targetID switch
+                        {
+                            "EMBER_VERDANT" => "the Verdant Spire",
+                            "EMBER_DOMINION" => "Caldrith Keep",
+                            "EMBER_WRATH" => "the Scorched Reach",
+                            _ => obj.targetID
+                        };
+                        objDesc = $"Discover {areaName}: {(obj.IsComplete ? "X" : "-")}";
                         break;
                     case ObjectiveType.TalkToNPC:
-                        objDesc = $"Talk to {obj.targetID}: {(obj.IsComplete ? "✔" : "❌")}";
+                        objDesc = $"Speak with {obj.targetID}: {(obj.IsComplete ? "X" : "-")}";
                         break;
                 }
 
@@ -83,9 +103,8 @@ public class QuestLogUI : MonoBehaviour
         }
     }
 
-    // Placeholder method for journal messages
     public void ShowQuestPopup(string message)
     {
-        Debug.Log($"[Journal] {message}"); // You can replace this with a UI popup later
+        Debug.Log($"[Journal] {message}");
     }
 }

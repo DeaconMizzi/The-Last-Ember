@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50dd64265ff6a424bbe64ddeb437c54e, type: 3}
+  m_Name: FlickersOfFate
+  m_EditorClassIdentifier: 
+  questID: COLLECT_EMBER
+  questName: Flickers of Fate
+  description: 'The Elder has shown you a path lit by lost fire. Three Embers remain
+    in the world. Whether you claim their power or let them shape the land, you must
+    find them all before your journey can continue.
+
+'
+  questType: 0
+  objectives:
+  - type: 1
+    targetID: EMBER_VERDANT
+    requiredCount: 1
+    currentCount: 0
+  - type: 1
+    targetID: EMBER_DOMINION
+    requiredCount: 1
+    currentCount: 0
+  - type: 1
+    targetID: EMBER_WRATH
+    requiredCount: 1
+    currentCount: 0
+  isActive: 0
+  isComplete: 0
+  questGiven: 0
+  hasCompletedQuest: 0

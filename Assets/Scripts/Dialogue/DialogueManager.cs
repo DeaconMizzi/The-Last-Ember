@@ -99,7 +99,7 @@ public class DialogueManager : MonoBehaviour
             npc.activeRuntimeQuest.isComplete = false;
             npc.assignedQuest.hasCompletedQuest = true;
 
-            FindObjectOfType<QuestLogUI>()?.UpdateQuestList();
+            StartCoroutine(DelayedQuestUIUpdate());
 
             dialoguePanel.SetActive(true);
             DisplayNode(currentNode);
@@ -561,7 +561,7 @@ public class DialogueManager : MonoBehaviour
 
         GameStateController.Instance?.SetDialogueState(false);
     }
-    
+
     private IEnumerator PlayEmberClaimSequence()
     {
         Debug.Log("🔥 Playing Ember Claim Animation...");
@@ -602,6 +602,12 @@ public class DialogueManager : MonoBehaviour
         // 4. Apply Ember ability + world shift
         EmberManager.Instance.SetEmber(GameStateController.Instance.verdantEmberData, EmberData.WorldShiftType.Seeded);
         Debug.Log("✅ Ember claimed. Bloomstep granted.");
+    }
+
+    private IEnumerator DelayedQuestUIUpdate()
+    {
+        yield return new WaitForEndOfFrame();
+        QuestLogUI.Instance?.UpdateQuestList();
     }
 
 }
