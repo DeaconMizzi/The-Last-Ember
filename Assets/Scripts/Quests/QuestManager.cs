@@ -45,8 +45,18 @@ public class QuestManager : MonoBehaviour
     {
         if (activeQuests.ContainsKey(questID))
         {
-            activeQuests[questID].isComplete = true;
+            var quest = activeQuests[questID];
+            quest.isComplete = true;
+            quest.hasCompletedQuest = true;
+
+            // Update the display mark
+            if (quest.description.Contains("-"))
+                quest.description = quest.description.Replace("-", "✓");
+
             Debug.Log("Quest completed: " + questID);
+
+            QuestLogUI.Instance?.UpdateQuestList();
+            FindObjectOfType<QuestPopupUI>()?.ShowPopup($"{quest.questName} completed!");
         }
     }
 
@@ -110,7 +120,7 @@ public class QuestManager : MonoBehaviour
 
             foreach (var obj in quest.objectives)
             {
-                
+
                 obj.currentCount = 0;
             }
         }
@@ -134,5 +144,50 @@ public class QuestManager : MonoBehaviour
         }
 
         return clone;
+    }
+    
+    public void IncrementObjective(string questID, string targetID, int amount)
+    {
+        if (!activeQuests.ContainsKey(questID))
+        {
+            Debug.LogWarning($"Quest {questID} is not active.");
+            return;
+        }
+
+        QuestData quest = activeQuests[questID];
+        foreach (var obj in quest.objectives)
+        {
+            if (obj.targetID == targetID)
+            {
+                obj.currentCount += amount;
+
+                // Clamp to avoid overflow
+                if (obj.currentCount > obj.requiredCount)
+                    obj.currentCount = obj.requiredCount;
+
+                Debug.Log($"✅ Updated {questID} objective {targetID} to {obj.currentCount}/{obj.requiredCount}");
+                break;
+            }
+        }
+
+        // Check if all objectives are complete
+        bool allComplete = true;
+        foreach (var obj in quest.objectives)
+        {
+            if (obj.currentCount < obj.requiredCount)
+            {
+                allComplete = false;
+                break;
+            }
+        }
+
+        if (allComplete)
+        {
+            quest.isComplete = true;
+            quest.hasCompletedQuest = true;
+            Debug.Log($"🎉 Quest {questID} completed!");
+        }
+
+        QuestLogUI.Instance?.UpdateQuestList();
     }
 }

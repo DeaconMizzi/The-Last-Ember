@@ -328,11 +328,14 @@ public class DialogueManager : MonoBehaviour
                         break;
 
                     case "TAKE_VERDANT_EMBER":
+                        MemoryFlags.Set("TAKE_VERDANT_EMBER");
                         StartCoroutine(PlayEmberClaimSequence());
+                        QuestManager.Instance?.IncrementObjective("COLLECT_EMBER", "EMBER_VERDANT", 1);;
                         break;
 
                     case "LEAVE_VERDANT_EMBER":
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Overgrown);
+                        QuestManager.Instance?.IncrementObjective("COLLECT_EMBER", "EMBER_VERDANT", 1);
 
                         GridOvergrowthManager overgrowth = FindObjectOfType<GridOvergrowthManager>();
                         if (overgrowth != null)
@@ -343,19 +346,23 @@ public class DialogueManager : MonoBehaviour
                     case "TAKE_DOMINION_EMBER":
                         MemoryFlags.Set("TAKE_DOMINION_EMBER");
                         StartCoroutine(PlayDominionEmberClaimSequence());
+                        QuestManager.Instance?.IncrementObjective("COLLECT_EMBER", "EMBER_DOMINION", 1);
                         break;
 
                     case "LEAVE_DOMINION_EMBER":
                         MemoryFlags.Set("LEAVE_DOMINION_EMBER");
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Reforged);
+                        QuestManager.Instance?.IncrementObjective("COLLECT_EMBER", "EMBER_DOMINION", 1);
                         break;
                     case "TAKE_WRATH_EMBER":
                         MemoryFlags.Set("TAKE_WRATH_EMBER");
                         StartCoroutine(PlayWrathEmberClaimSequence());
+                        QuestManager.Instance?.IncrementObjective("COLLECT_EMBER", "EMBER_WRATH", 1);
                         break;
 
                     case "LEAVE_WRATH_EMBER":
                         MemoryFlags.Set("LEAVE_DOMINION_EMBER");
+                        QuestManager.Instance?.IncrementObjective("COLLECT_EMBER", "EMBER_WRATH", 1);
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Extinguished);
                          CameraShaker shaker = GameObject.Find("CmCam")?.GetComponent<CameraShaker>();
                         if (shaker != null)
