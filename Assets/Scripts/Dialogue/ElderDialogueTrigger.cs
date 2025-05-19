@@ -10,6 +10,10 @@ public class ElderDialogueTrigger : MonoBehaviour
     public string[] elderLines;
     public Sprite elderPortrait;
     public string questIDToGive = "COLLECT_EMBER";
+    public bool hideSpeakerName = false; // ✅ New toggle to optionally hide speaker name
+    public Animator fadeAnimator; // ✅ Optional fade animator
+    public string fadeOutTriggerName = "FadeOut"; // ✅ Trigger or state name to play
+    public GameObject fadePanelObject; // ✅ Panel or canvas to activate before fading
 
     private bool triggered = false;
 
@@ -21,36 +25,48 @@ public class ElderDialogueTrigger : MonoBehaviour
         if (director != null)
             director.Pause();
 
-        gameState.FreezeGame();
-        DialogueManager.Instance.StartSimpleDialogue(elderLines, "Elder", elderPortrait, OnDialogueComplete);
+        if (gameState != null)
+            gameState.FreezeGame();
+
+        string speaker = hideSpeakerName ? "" : "Elder";
+        DialogueManager.Instance.StartSimpleDialogue(elderLines, speaker, elderPortrait, OnDialogueComplete);
     }
 
     void OnDialogueComplete()
     {
-        // ✅ Directly reference this GameObject’s NPC component
         if (TryGetComponent<NPC>(out NPC npc) && npc.assignedQuest != null && npc.assignedQuest.questID == questIDToGive)
         {
             npc.assignedQuest.questGiven = true;
             npc.assignedQuest.isActive = true;
             QuestManager.Instance.GiveQuest(npc.assignedQuest);
 
-            // ✅ Fix: Immediately update quest log so it's ready for first Tab press
             QuestLogUI.Instance?.UpdateQuestList();
-
             npc.GetComponent<TalkPromptController>()?.UpdateQuestMarker();
 
             Debug.Log($"🧭 Gave quest '{npc.assignedQuest.questName}' from ElderDialogueTrigger.");
         }
-        else
-        {
-            Debug.LogWarning("❗ ElderDialogueTrigger could not give quest — NPC or assignedQuest missing/mismatched.");
-        }
 
-        gameState.UnfreezeGame();
+        if (gameState != null)
+            gameState.UnfreezeGame();
 
         if (director != null)
             director.Resume();
 
+        // ✅ Activate fade panel if assigned
+        if (fadePanelObject != null)
+            fadePanelObject.SetActive(true);
+
+        // ✅ Trigger fade after one frame
+        if (fadeAnimator != null)
+            StartCoroutine(PlayFadeOutDelayed());
+
         gameObject.SetActive(false);
+    }
+
+    IEnumerator PlayFadeOutDelayed()
+    {
+        yield return null; // wait one frame after enabling panel
+        fadeAnimator.Play(fadeOutTriggerName);
+        Debug.Log("🌙 FadeOut triggered after final dialogue (delayed).");
     }
 }

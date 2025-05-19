@@ -4,15 +4,20 @@ using UnityEngine;
 
 public static class MemoryFlags
 {
-    private static Dictionary<string, bool> flags = new Dictionary<string, bool>();
-
     public static void Set(string key)
     {
-        flags[key] = true;
+        PlayerPrefs.SetInt(key, 1);
+        PlayerPrefs.Save();
     }
 
     public static bool Get(string key)
     {
-        return flags.ContainsKey(key) && flags[key];
+        return PlayerPrefs.GetInt(key, 0) == 1;
+    }
+
+    public static void ClearAll()
+    {
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
     }
 }

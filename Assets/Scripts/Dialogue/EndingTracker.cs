@@ -9,9 +9,14 @@ public class EndingTracker : MonoBehaviour
     private void Awake()
     {
         if (Instance == null)
+        {
             Instance = this;
+            DontDestroyOnLoad(gameObject); // ✅ Keeps the tracker alive between scenes
+        }
         else
+        {
             Destroy(gameObject);
+        }
     }
 
     public int GetEmberScore()
@@ -31,13 +36,22 @@ public class EndingTracker : MonoBehaviour
 
     public string GetEndingID()
     {
+        bool tookAll = MemoryFlags.Get("TAKE_VERDANT_EMBER") &&
+                       MemoryFlags.Get("TAKE_DOMINION_EMBER") &&
+                       MemoryFlags.Get("TAKE_WRATH_EMBER");
+
+        bool leftAny = MemoryFlags.Get("LEAVE_VERDANT_EMBER") ||
+                       MemoryFlags.Get("LEAVE_DOMINION_EMBER") ||
+                       MemoryFlags.Get("LEAVE_WRATH_EMBER");
+
+        if (tookAll && !leftAny)
+            return "GOOD_ENDING";
+
         int score = GetEmberScore();
 
-        if (score >= 3)
-            return "GOOD_ENDING";
-        else if (score >= 1)
+        if (score >= 1)
             return "NEUTRAL_ENDING";
-        else
-            return "BAD_ENDING";
+
+        return "BAD_ENDING";
     }
 }
