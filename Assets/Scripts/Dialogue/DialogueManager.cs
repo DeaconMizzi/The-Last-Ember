@@ -349,6 +349,14 @@ public class DialogueManager : MonoBehaviour
                         MemoryFlags.Set("LEAVE_DOMINION_EMBER");
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Reforged);
                         break;
+                    case "TAKE_WRATH_EMBER":
+                        StartCoroutine(PlayWrathEmberClaimSequence());
+                        break;
+
+                    case "LEAVE_WRATH_EMBER":
+                        EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Extinguished);
+                        // (Coming soon) Call a method like SpawnWrathEnemies();
+                        break;
 
 
                     default:
@@ -660,6 +668,33 @@ public class DialogueManager : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
         QuestLogUI.Instance?.UpdateQuestList();
+    }
+    private IEnumerator PlayWrathEmberClaimSequence()
+    {
+        Debug.Log("🔥 Playing Wrath Ember Claim Animation...");
+
+        CameraShaker shaker = GameObject.Find("CmCam")?.GetComponent<CameraShaker>();
+        if (shaker != null)
+            shaker.Shake(7f, 0.5f);
+        else
+            Debug.LogWarning("CameraShaker not found on CmCam.");
+
+        GameObject ember = GameObject.FindWithTag("WrathEmber");
+        if (ember != null)
+        {
+            EmberFloatEffect fx = ember.GetComponent<EmberFloatEffect>();
+            if (fx != null)
+                fx.PlayEffect();
+        }
+        else
+        {
+            Debug.LogWarning("WrathEmber not found in scene.");
+        }
+
+        yield return new WaitForSeconds(1.7f);
+
+        EmberManager.Instance.SetEmber(GameStateController.Instance.wrathEmberData, EmberData.WorldShiftType.Default);
+        Debug.Log("✅ Wrath Ember claimed. FlameGuard granted.");
     }
 
 }

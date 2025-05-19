@@ -25,6 +25,12 @@ public class PlayerAbilities : MonoBehaviour
 
     [Header("Flame Guard")]
     private bool hasFlameGuard = false;
+    private bool flameGuardOnCooldown = false;
+    public GameObject flameShieldObject; // Assign in Inspector
+    public float flameGuardDuration = 3f;
+    public float flameGuardCooldown = 6f;
+    public int contactDamage = 1;
+    
     [Header("Pulse FX")]
     public GameObject dustFX; // Assign in Inspector (should be disabled by default)
     public Vector3 dustFXPosition = new Vector3(-0.278f, -0.901f, 0f); // Your target position
@@ -40,6 +46,7 @@ public class PlayerAbilities : MonoBehaviour
     {
         HandleBloomstep();
         HandleCommandPulse();
+        HandleFlameGuard();
     }
 
     // ===== Ability Unlock Methods =====
@@ -218,5 +225,51 @@ public class PlayerAbilities : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         fx.SetActive(false);
+    }
+
+    void HandleFlameGuard()
+    {
+        if (!hasFlameGuard || flameGuardOnCooldown)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.R)) // You can change this key
+        {
+            Debug.Log("🔥 Flame Guard activated!");
+            StartCoroutine(ActivateFlameGuard());
+        }
+    }
+    private IEnumerator ActivateFlameGuard()
+    {
+        flameGuardOnCooldown = true;
+
+        if (flameShieldObject != null)
+            flameShieldObject.SetActive(true);
+
+        float timer = 0f;
+
+        while (timer < flameGuardDuration)
+        {
+            // Damage any enemies in contact
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 1f, enemyLayer);
+            foreach (Collider2D hit in hits)
+            {
+                EnemyHealth enemy = hit.GetComponent<EnemyHealth>();
+                if (enemy != null)
+                {
+                    Vector2 knockbackDir = (hit.transform.position - transform.position).normalized;
+                    enemy.TakeDamage(contactDamage, knockbackDir, 2f);
+                }
+            }
+
+            timer += 0.5f;
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        if (flameShieldObject != null)
+            flameShieldObject.SetActive(false);
+
+        yield return new WaitForSeconds(flameGuardCooldown);
+        flameGuardOnCooldown = false;
+        Debug.Log("🔥 Flame Guard ready again.");
     }
 }
