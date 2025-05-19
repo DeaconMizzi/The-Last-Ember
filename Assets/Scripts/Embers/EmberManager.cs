@@ -6,7 +6,7 @@ public class EmberManager : MonoBehaviour
 {
     public static EmberManager Instance;
 
-    public EmberData currentEmber;
+    public List<EmberData> claimedEmbers = new List<EmberData>();
     public GameObject player;
 
     private void Awake()
@@ -22,10 +22,16 @@ public class EmberManager : MonoBehaviour
     /// </summary>
     public void SetEmber(EmberData ember, EmberData.WorldShiftType shift)
     {
-        currentEmber = ember;
-
-        if (ember != null)
+        if (ember != null && !claimedEmbers.Contains(ember))
+        {
+            claimedEmbers.Add(ember);
             ApplyAbility(ember.abilityGranted);
+
+            if (ember.worldEffectPrefab != null && player != null)
+            {
+                Instantiate(ember.worldEffectPrefab, player.transform.position, Quaternion.identity);
+            }
+        }
 
         ApplyWorldChange(shift);
     }
@@ -73,11 +79,6 @@ public class EmberManager : MonoBehaviour
             case EmberData.WorldShiftType.Reforged:
                 Debug.Log("🛠️ The world stabilizes with strength.");
                 break;
-        }
-
-        if (currentEmber != null && currentEmber.worldEffectPrefab != null)
-        {
-            Instantiate(currentEmber.worldEffectPrefab, player.transform.position, Quaternion.identity);
         }
     }
 }

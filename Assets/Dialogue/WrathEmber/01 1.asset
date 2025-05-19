@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a6326df0dff5a74e976cdea0ffa1f76, type: 3}
+  m_Name: 01 1
+  m_EditorClassIdentifier: 
+  speakerName: 
+  dialogueText: It waits. Not for permission. For a verdict.
+  portrait: {fileID: 0}
+  choices:
+  - choiceText: Take the Ember
+    nextNode: {fileID: 11400000, guid: e47ae6a0bee47c24b9c7816d20fc2d46, type: 2}
+    consequenceID: TAKE_WRATH_EMBER
+  - choiceText: Step back and let it grow
+    nextNode: {fileID: 11400000, guid: 47c7fede25c45fd4fa841b667125ea60, type: 2}
+    consequenceID: LEAVE_WRATH_EMBER
+  nextAutoNode: {fileID: 0}

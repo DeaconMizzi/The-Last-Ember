@@ -350,12 +350,14 @@ public class DialogueManager : MonoBehaviour
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Reforged);
                         break;
                     case "TAKE_WRATH_EMBER":
+                        MemoryFlags.Set("TAKE_WRATH_EMBER");
                         StartCoroutine(PlayWrathEmberClaimSequence());
                         break;
 
                     case "LEAVE_WRATH_EMBER":
+                        MemoryFlags.Set("LEAVE_DOMINION_EMBER");
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Extinguished);
-                        // (Coming soon) Call a method like SpawnWrathEnemies();
+                        WrathEnemySpawner.Instance?.TriggerSpawns();
                         break;
 
 

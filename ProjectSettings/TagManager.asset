@@ -12,6 +12,7 @@ TagManager:
   - EnemyAttack
   - VerdantEmber
   - DominionEmber
+  - WrathEmber
   layers:
   - Default
   - TransparentFX
