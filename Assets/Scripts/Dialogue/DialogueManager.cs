@@ -357,6 +357,11 @@ public class DialogueManager : MonoBehaviour
                     case "LEAVE_WRATH_EMBER":
                         MemoryFlags.Set("LEAVE_DOMINION_EMBER");
                         EmberManager.Instance.SetEmber(null, EmberData.WorldShiftType.Extinguished);
+                         CameraShaker shaker = GameObject.Find("CmCam")?.GetComponent<CameraShaker>();
+                        if (shaker != null)
+                            shaker.Shake(7f, 0.5f);
+                        else
+                            Debug.LogWarning("CameraShaker not found on CmCam.");
                         WrathEnemySpawner.Instance?.TriggerSpawns();
                         break;
 
