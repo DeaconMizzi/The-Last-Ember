@@ -120,7 +120,8 @@ public class GameStateController : MonoBehaviour
     }
     void Start()
     {
+        MemoryFlags.ClearAll(); // 🧹 Fresh start
         QuestManager.Instance.ResetAllQuestStates();
-        FreezeGame(); // if you're already using that
+        FreezeGame();
     }
 }

@@ -5,6 +5,15 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewEmber", menuName = "Ember System/Ember")]
 public class EmberData : ScriptableObject
 {
+    public enum EmberID
+    {
+        Verdant,
+        Dominion,
+        Wrath
+    }
+
+    public EmberID emberID;
+
     public string emberName;
     public string description;
     public Sprite icon;

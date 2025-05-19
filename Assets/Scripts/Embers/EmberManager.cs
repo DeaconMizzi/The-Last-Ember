@@ -8,6 +8,7 @@ public class EmberManager : MonoBehaviour
 
     public List<EmberData> claimedEmbers = new List<EmberData>();
     public GameObject player;
+    public static bool LeftVerdantEmber = false;
 
     private void Awake()
     {
@@ -31,6 +32,16 @@ public class EmberManager : MonoBehaviour
             {
                 Instantiate(ember.worldEffectPrefab, player.transform.position, Quaternion.identity);
             }
+
+            // If the player TAKES the Verdant Ember, ensure flag is false
+            if (ember.emberID == EmberData.EmberID.Verdant)
+                LeftVerdantEmber = false;
+        }
+        else
+        {
+            // If ember is null but shift is Overgrown, assume it was LEFT
+            if (shift == EmberData.WorldShiftType.Overgrown)
+                LeftVerdantEmber = true;
         }
 
         ApplyWorldChange(shift);

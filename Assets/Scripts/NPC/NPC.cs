@@ -26,4 +26,13 @@ public class NPC : MonoBehaviour
     public QuestData assignedQuest;
     [HideInInspector] public QuestData activeRuntimeQuest;
     public bool canTalkAfterQuest = true;
+
+    void Start()
+    {
+        // Only set this if nothing else has initialized a quest
+        if (assignedQuest != null && activeRuntimeQuest == null)
+        {
+            activeRuntimeQuest = assignedQuest;
+        }
+    }
 }

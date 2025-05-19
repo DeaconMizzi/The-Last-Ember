@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: QuestAccepted
   m_EditorClassIdentifier: 
   speakerName: Elder
-  dialogueText: Still here? Go kill those Orcs!
+  dialogueText: Go North, East, or South. Each area has an Ember. Goodluck.
   portrait: {fileID: 21300000, guid: 1c783846440b16644b3ee6501fe5e363, type: 3}
   choices: []
   nextAutoNode: {fileID: 0}

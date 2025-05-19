@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class DialogueManager : MonoBehaviour
 {
@@ -73,7 +74,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         // If a runtime quest is active and completed
-        if (npc.activeRuntimeQuest != null && npc.activeRuntimeQuest.questGiven && QuestManager.Instance.IsQuestComplete(npc.activeRuntimeQuest.questID))
+        if (npc.assignedQuest != null && QuestManager.Instance.IsQuestComplete(npc.assignedQuest.questID))
         {
             // One-time conditional dialogue override
             bool hasTriggerFlag = !string.IsNullOrEmpty(npc.memoryFlagCondition) && MemoryFlags.Get(npc.memoryFlagCondition);
@@ -87,14 +88,16 @@ public class DialogueManager : MonoBehaviour
             }
             else if (npc.questCompleteNode != null)
             {
+                Debug.Log("✅ Showing Elder’s post-ember dialogue.");
                 currentNode = npc.questCompleteNode;
             }
             else
             {
-                currentNode = CreateFallbackNode(npc.npcName, "They look busy and don’t respond.");
+                Debug.Log("❗ Elder has no questCompleteNode fallback.");
+                currentNode = CreateFallbackNode(npc.npcName, "They look thoughtful… watching the flames beyond.");
             }
 
-            QuestManager.Instance.RemoveQuest(npc.activeRuntimeQuest.questID);
+            QuestManager.Instance.RemoveQuest(npc.assignedQuest.questID);
             npc.activeRuntimeQuest.questGiven = false;
             npc.activeRuntimeQuest.isComplete = false;
             npc.assignedQuest.hasCompletedQuest = true;
@@ -369,9 +372,41 @@ public class DialogueManager : MonoBehaviour
                             shaker.Shake(7f, 0.5f);
                         else
                             Debug.LogWarning("CameraShaker not found on CmCam.");
-                        WrathEnemySpawner.Instance?.TriggerSpawns();
+                            WrathEnemySpawner.Instance?.TriggerSpawns();
                         break;
+                    case "LOAD_FINAL_SCENE":
+                            if (EndingTracker.Instance != null)
+                            {
+                                string ending = EndingTracker.Instance.GetEndingID();
+                                Debug.Log("🧮 Current Ending Score: " + ending);
+                                Debug.Log("Flags: " +
+                                    $"V:{MemoryFlags.Get("TAKE_VERDANT_EMBER")}/{MemoryFlags.Get("LEAVE_VERDANT_EMBER")}, " +
+                                    $"D:{MemoryFlags.Get("TAKE_DOMINION_EMBER")}/{MemoryFlags.Get("LEAVE_DOMINION_EMBER")}, " +
+                                    $"W:{MemoryFlags.Get("TAKE_WRATH_EMBER")}/{MemoryFlags.Get("LEAVE_WRATH_EMBER")}");
 
+                                switch (ending)
+                                {
+                                    case "GOOD_ENDING":
+                                        SceneManager.LoadScene("FinalScene");
+                                        break;
+                                    case "NEUTRAL_ENDING":
+                                        SceneManager.LoadScene("FinalScene_Neutral");
+                                        break;
+                                    case "BAD_ENDING":
+                                        SceneManager.LoadScene("FinalScene_Bad");
+                                        break;
+                                    default:
+                                        Debug.LogWarning("⚠️ No valid ending detected. Defaulting to FinalScene.");
+                                        SceneManager.LoadScene("FinalScene");
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                Debug.LogError("❌ EndingTracker.Instance is null. Cannot load ending scene.");
+                                SceneManager.LoadScene("FinalScene"); // Optional fallback
+                            }
+                            break;
 
                     default:
                         if (choice.consequenceID.StartsWith("GIVE_"))
