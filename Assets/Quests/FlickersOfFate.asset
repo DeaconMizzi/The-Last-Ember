@@ -24,16 +24,16 @@ MonoBehaviour:
   - type: 1
     targetID: EMBER_VERDANT
     requiredCount: 1
-    currentCount: 1
+    currentCount: 0
   - type: 1
     targetID: EMBER_DOMINION
     requiredCount: 1
-    currentCount: 1
+    currentCount: 0
   - type: 1
     targetID: EMBER_WRATH
     requiredCount: 1
-    currentCount: 1
+    currentCount: 0
   isActive: 1
   isComplete: 0
-  questGiven: 0
-  hasCompletedQuest: 1
+  questGiven: 1
+  hasCompletedQuest: 0

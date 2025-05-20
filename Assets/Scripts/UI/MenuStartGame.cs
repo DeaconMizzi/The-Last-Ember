@@ -9,6 +9,7 @@ public class MenuStartGame : MonoBehaviour
 
     public void StartGame()
     {
+        MusicManager.Instance.FadeOutMusic();
         SceneManager.LoadScene(mainSceneName);
     }
 

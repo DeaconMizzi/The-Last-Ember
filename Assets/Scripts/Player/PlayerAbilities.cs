@@ -35,6 +35,11 @@ public class PlayerAbilities : MonoBehaviour
     public GameObject dustFX; // Assign in Inspector (should be disabled by default)
     public Vector3 dustFXPosition = new Vector3(-0.278f, -0.901f, 0f); // Your target position
 
+    [Header("Control UI References")]
+    public GameObject bloomstepControlText;
+    public GameObject flameguardControlText;
+    public GameObject commandpulseControlText;
+
 
     void Start()
     {
@@ -53,18 +58,30 @@ public class PlayerAbilities : MonoBehaviour
     public void EnableBloomstep()
     {
         canBloomstep = true;
+
+        if (bloomstepControlText != null)
+            bloomstepControlText.SetActive(true);
+
         Debug.Log("✅ Bloomstep unlocked!");
     }
 
     public void EnableFlameGuard()
     {
         hasFlameGuard = true;
+
+        if (flameguardControlText != null)
+            flameguardControlText.SetActive(true);
+
         Debug.Log("✅ Flame Guard unlocked!");
     }
 
     public void EnableCommandPulse()
     {
         hasCommandPulse = true;
+
+        if (commandpulseControlText != null)
+            commandpulseControlText.SetActive(true);
+
         Debug.Log("✅ Command Pulse unlocked!");
     }
 
