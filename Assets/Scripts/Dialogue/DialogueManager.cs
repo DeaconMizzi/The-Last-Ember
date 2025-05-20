@@ -258,8 +258,12 @@ public class DialogueManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
             {
                 StopCoroutine(typingCoroutine);
+                
                 dialogueText.text = simpleDialogueLines[simpleDialogueIndex];
                 typingCoroutine = null;
+
+                if (typingAudioSource != null && typingAudioSource.isPlaying)
+                    typingAudioSource.Stop();
 
                 if (waitCoroutine != null)
                     StopCoroutine(waitCoroutine);
@@ -275,9 +279,13 @@ public class DialogueManager : MonoBehaviour
         // Handle Node-Based Dialogue (standard NPC quests)
         if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
         {
+            
             StopCoroutine(typingCoroutine);
+
             dialogueText.text = currentNode.dialogueText;
             typingCoroutine = null;
+            if (typingAudioSource != null && typingAudioSource.isPlaying)
+                    typingAudioSource.Stop();
 
             if (currentChoices == null || currentChoices.Count == 0)
             {
@@ -446,7 +454,7 @@ public class DialogueManager : MonoBehaviour
         }
         if (typingAudioSource != null)
             typingAudioSource.Stop();
-            
+
         if (typingCoroutine != null)
         {
             StopCoroutine(typingCoroutine);
