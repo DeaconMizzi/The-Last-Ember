@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Cutscenes/BadEnding.playable.meta
 guid: 67dfef47e08468b419b9aa99d639663f
+========
+guid: ee2a5d706a4fa344ba28b9063009b080
+>>>>>>>> 45b2a31bcaab976dbf59e767e94e6c1ce551a496:Assets/Cutscenes/GoodEnding2Timeline.playable.meta
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 11400000
