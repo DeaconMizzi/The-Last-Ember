@@ -14,4 +14,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/FinalScene_Neutral.unity
     guid: 7038428b9d79a1f4e8339eae6014c4c0
+  - enabled: 1
+    path: Assets/Scenes/FinalScene_Bad.unity
+    guid: 7ca79f17558ca984f9c3e6b38b8c6846
+  - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: 0d22c59e6dd583143be3ba6d779272dd
   m_configObjects: {}
