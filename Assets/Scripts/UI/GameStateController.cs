@@ -120,6 +120,7 @@ public class GameStateController : MonoBehaviour
     }
     void Start()
     {
+        MusicManager.Instance?.FadeInMusic();
         MemoryFlags.ClearAll(); // 🧹 Fresh start
         QuestManager.Instance.ResetAllQuestStates();
         FreezeGame();

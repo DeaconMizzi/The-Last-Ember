@@ -281,7 +281,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64e80fc10de9f164fb4cd29b89034b18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 1
+  maxHealth: 15
+  currentHealth: 0
   enemyType: 4
   isBranhalm: 1
 --- !u!114 &-5999266758332734570

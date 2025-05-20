@@ -33,7 +33,8 @@ public class DialogueManager : MonoBehaviour
 
     private NPC currentNPC;
     public GridOvergrowthManager overgrowthManager;
-
+    [Header("Audio")]
+    public AudioSource typingAudioSource;
 
     private void Awake()
     {
@@ -257,8 +258,12 @@ public class DialogueManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
             {
                 StopCoroutine(typingCoroutine);
+                
                 dialogueText.text = simpleDialogueLines[simpleDialogueIndex];
                 typingCoroutine = null;
+
+                if (typingAudioSource != null && typingAudioSource.isPlaying)
+                    typingAudioSource.Stop();
 
                 if (waitCoroutine != null)
                     StopCoroutine(waitCoroutine);
@@ -274,9 +279,13 @@ public class DialogueManager : MonoBehaviour
         // Handle Node-Based Dialogue (standard NPC quests)
         if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
         {
+            
             StopCoroutine(typingCoroutine);
+
             dialogueText.text = currentNode.dialogueText;
             typingCoroutine = null;
+            if (typingAudioSource != null && typingAudioSource.isPlaying)
+                    typingAudioSource.Stop();
 
             if (currentChoices == null || currentChoices.Count == 0)
             {
@@ -443,6 +452,8 @@ public class DialogueManager : MonoBehaviour
             StopCoroutine(waitCoroutine);
             waitCoroutine = null;
         }
+        if (typingAudioSource != null)
+            typingAudioSource.Stop();
 
         if (typingCoroutine != null)
         {
@@ -461,11 +472,19 @@ public class DialogueManager : MonoBehaviour
     {
         dialogueText.text = "";
 
+        // 🔊 Start typing sound
+        if (typingAudioSource != null && !typingAudioSource.isPlaying)
+            typingAudioSource.Play();
+
         foreach (char c in fullText)
         {
             dialogueText.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }
+
+        // 🔇 Stop sound after line is typed
+        if (typingAudioSource != null && typingAudioSource.isPlaying)
+            typingAudioSource.Stop();
 
         typingCoroutine = null;
 
@@ -564,18 +583,27 @@ public class DialogueManager : MonoBehaviour
     IEnumerator TypeSimpleLine(string line)
     {
         dialogueText.text = "";
+
+        if (typingAudioSource != null && !typingAudioSource.isPlaying)
+            typingAudioSource.Play();
+
         foreach (char c in line)
         {
             dialogueText.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }
 
+        if (typingAudioSource != null && typingAudioSource.isPlaying)
+            typingAudioSource.Stop();
+
         typingCoroutine = null;
         isWaitingForContinue = true;
+
         if (waitCoroutine != null)
             StopCoroutine(waitCoroutine);
         waitCoroutine = StartCoroutine(WaitForSimpleContinue());
     }
+
 
     IEnumerator WaitForSimpleContinue()
     {
@@ -611,6 +639,8 @@ public class DialogueManager : MonoBehaviour
 
     public void ForceEndDialogue()
     {
+        if (typingAudioSource != null)
+             typingAudioSource.Stop();
         if (typingCoroutine != null)
         {
             StopCoroutine(typingCoroutine);

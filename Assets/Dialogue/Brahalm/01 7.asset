@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speakerName: Branhalm
   dialogueText: "She gave us life beyond life\u2026 but not choice."
-  portrait: {fileID: 21300000, guid: 514aabb8914db4c4a972494202fb2378, type: 3}
+  portrait: {fileID: 21300000, guid: fdfabedd68d456f46af6b3cf26e9c1d2, type: 3}
   choices: []
   nextAutoNode: {fileID: 11400000, guid: a65003263b376d7499415588b01c883e, type: 2}
