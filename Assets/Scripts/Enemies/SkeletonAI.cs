@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable
+public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
 {
+    private bool isDead = false;
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
     public float chaseRange = 5f;
@@ -62,6 +63,7 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable
 
     void Update()
     {
+         if (isDead) return;
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         State newState = (distanceToPlayer <= chaseRange) ? State.Chase : State.Patrol;
 
@@ -85,9 +87,24 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable
         if (anim != null)
             anim.SetBool("IsWalking", currentState == State.Patrol || currentState == State.Chase);
     }
+    public void Stagger(float duration)
+    {
+        if (!isAttacking && !isKnockedBack)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            StartCoroutine(ResumeAfterStagger(duration));
+        }
+    }
 
+    private IEnumerator ResumeAfterStagger(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+    }
     void FixedUpdate()
     {
+         if (isDead) return;
         if (isKnockedBack)
         {
             knockbackTimer -= Time.fixedDeltaTime;
@@ -181,6 +198,7 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable
 
     IEnumerator AttackRoutine()
     {
+        if (isDead) yield break;
         isAttacking = true;
         rb.velocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
@@ -240,6 +258,9 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable
 
     public void PlayDeathAnimation()
     {
+        if (isDead) return; // ✅ Prevent multiple calls
+        isDead = true;
+
         if (anim != null)
         {
             anim.SetBool("Death", true);
@@ -252,7 +273,7 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable
 
     private IEnumerator HandleDeath()
     {
-        yield return new WaitForSeconds(1.2f);
+        yield return new WaitForSeconds(1f);
         Destroy(gameObject); // Or disable for pooling
     }
 

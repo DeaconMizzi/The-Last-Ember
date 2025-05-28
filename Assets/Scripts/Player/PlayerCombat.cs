@@ -13,7 +13,7 @@ public class PlayerCombat : MonoBehaviour
     public float attackCooldown = 0.8f;
     public float hitboxActiveTime = 0.2f;
     public int attackDamage = 1;
-    public float knockbackForce = 5f;
+    public float knockbackForce = 2500f;
 
     [Header("Directional Hitboxes")]
     public GameObject hitboxUp;
@@ -23,13 +23,17 @@ public class PlayerCombat : MonoBehaviour
 
     private GameObject currentActiveHitbox;
 
+    private PlayerMovement playerMovement; // Reference to PlayerMovement
+
     void Start()
     {
         animator = GetComponent<Animator>();
+        playerMovement = GetComponent<PlayerMovement>(); // Get PlayerMovement reference
     }
 
     void Update()
     {
+        if (DialogueManager.DialogueIsOpen) return;
         if (!canAttack)
             return;
 
@@ -53,6 +57,13 @@ public class PlayerCombat : MonoBehaviour
         animator.SetTrigger("Attack");
         attackCooldownTimer = attackCooldown;
 
+        // Freeze player movement during attack
+        if (playerMovement != null)
+        {
+            playerMovement.canMove = false;
+            StartCoroutine(UnlockPlayerMovementAfterDelay(attackCooldown)); // Locks for 0.8s (same as attack cooldown)
+        }
+
         Vector2 dir = lastMoveDir;
 
         // Disable all hitboxes first
@@ -74,6 +85,13 @@ public class PlayerCombat : MonoBehaviour
             currentActiveHitbox.SetActive(true);
 
         StartCoroutine(DisableHitboxAfterDelay(hitboxActiveTime));
+    }
+
+    private IEnumerator UnlockPlayerMovementAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (playerMovement != null)
+            playerMovement.canMove = true;
     }
 
     private IEnumerator DisableHitboxAfterDelay(float delay)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class ElementalAI : MonoBehaviour
+public class ElementalAI : MonoBehaviour, IStaggerable
 {
     [Header("Movement & Ranges")]
     public float moveSpeed = 1.5f;
@@ -173,8 +173,19 @@ public class ElementalAI : MonoBehaviour
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
     }
+   public void Stagger(float duration)
+    {
+        rb.velocity = Vector2.zero;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        StartCoroutine(ResumeAfterStagger(duration));
+    }
 
-    void OnDrawGizmosSelected()
+    private IEnumerator ResumeAfterStagger(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+}
+void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);

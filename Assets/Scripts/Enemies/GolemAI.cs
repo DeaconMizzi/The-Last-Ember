@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable
+public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -54,13 +54,6 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable
 
         if (anim != null)
             anim.SetBool("IsWalking", currentState == State.Patrol || currentState == State.Chase);
-
-        // TEMPORARY: Manual test trigger for slam
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            Debug.Log("🧪 Test Slam Triggered");
-            TriggerSlam();
-        }
     }
 
     void FixedUpdate()
@@ -163,16 +156,11 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable
         if (anim != null)
             anim.SetTrigger("Attack");
 
-        yield return new WaitForSeconds(attackDuration * 0.5f);
-        Debug.Log("👊 TriggerSlam() called from coroutine");
-        TriggerSlam();
-
-        yield return new WaitForSeconds(attackDuration * 0.5f);
+        yield return new WaitForSeconds(attackDuration);
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
     }
-
     public void TriggerSlam()
     {
         Debug.Log("🔥 TriggerSlam() executing");
@@ -237,5 +225,20 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isStunned = false;
+    }
+    public void Stagger(float duration)
+    {
+        if (!isAttacking && !isKnockedBack)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            StartCoroutine(ResumeAfterStagger(duration));
+        }
+    }
+
+    private IEnumerator ResumeAfterStagger(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
 }

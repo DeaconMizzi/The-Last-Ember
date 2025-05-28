@@ -5,7 +5,8 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
     public int maxHealth = 3;
-    public  int currentHealth;
+    public int currentHealth;
+    private bool isDead = false;
 
     public EnemyType enemyType;
     private Animator animator;
@@ -25,10 +26,10 @@ public class EnemyHealth : MonoBehaviour
         Debug.Log($"{enemyType} took {amount} damage!");
         GetComponent<Rigidbody2D>()?.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
 
-        OrcAI ai = GetComponent<OrcAI>();
-        if (ai != null)
+        IStaggerable staggerTarget = GetComponent<IStaggerable>();
+        if (staggerTarget != null)
         {
-            ai.ApplyKnockback(0.25f);
+            staggerTarget.Stagger(1f);
         }
 
         if (animator != null)
@@ -44,6 +45,9 @@ public class EnemyHealth : MonoBehaviour
 
     void Die()
     {
+        if (isDead) return; // ✅ Prevent multiple calls
+        isDead = true;
+
         Debug.Log($"{enemyType} died!");
         QuestManager.Instance.RegisterEnemyKill(enemyType);
 
@@ -53,29 +57,14 @@ public class EnemyHealth : MonoBehaviour
             Debug.Log("Branhalm defeated — MemoryFlag set.");
         }
 
-        // Trigger animator death animation
         if (animator != null)
         {
             animator.SetTrigger("Death");
         }
 
-        // Disable AI (for Orcs)
-        OrcAI orcAI = GetComponent<OrcAI>();
-        if (orcAI != null) orcAI.enabled = false;
-
-        // Disable AI (for Skeletons)
-        SkeletonAI skeletonAI = GetComponent<SkeletonAI>();
-        if (skeletonAI != null)
-        {
-            skeletonAI.PlayDeathAnimation();
-            return; // Let SkeletonAI handle the destroy
-        }
-
-        // Disable collider
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
-        // Stop all physics movement
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -84,8 +73,6 @@ public class EnemyHealth : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
         }
 
-        // Destroy after delay to allow death animation
         Destroy(gameObject, 1.5f);
     }
-
 }

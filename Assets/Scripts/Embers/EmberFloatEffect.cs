@@ -24,8 +24,13 @@ public class EmberFloatEffect : MonoBehaviour
         StartCoroutine(FloatAndFade());
     }
 
-    private System.Collections.IEnumerator FloatAndFade()
+   private IEnumerator FloatAndFade()
     {
+        // Disable Collider to prevent pushing the player
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+            col.enabled = false;
+
         float t = 0f;
 
         // FLOAT UP
@@ -50,6 +55,6 @@ public class EmberFloatEffect : MonoBehaviour
             yield return null;
         }
 
-        Destroy(gameObject); // Or setActive(false) if you prefer
+        Destroy(gameObject);
     }
-}
+    }

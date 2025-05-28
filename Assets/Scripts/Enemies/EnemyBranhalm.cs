@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class EnemyBranhalm : MonoBehaviour, IDominionScalable
+public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -198,7 +198,21 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable
         isKnockedBack = true;
         knockbackTimer = duration;
     }
+    public void Stagger(float duration)
+    {
+        if (!isAttacking && !isKnockedBack)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            StartCoroutine(ResumeAfterStagger(duration));
+        }
+    }
 
+    private IEnumerator ResumeAfterStagger(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+    }
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;

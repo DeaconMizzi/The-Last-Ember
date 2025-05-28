@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3220716523537658683}
   - component: {fileID: 3706623708806935309}
-  m_Layer: 6
+  m_Layer: 10
   m_Name: FeetCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -88,7 +88,7 @@ GameObject:
   - component: {fileID: 7458475867738320800}
   - component: {fileID: 1003439703505864680}
   - component: {fileID: 7041150605226455570}
-  m_Layer: 7
+  m_Layer: 10
   m_Name: GhostTrailPrefab
   m_TagString: Player
   m_Icon: {fileID: 0}

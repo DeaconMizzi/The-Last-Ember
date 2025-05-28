@@ -11,10 +11,11 @@ public class PlayerMovement : MonoBehaviour
     private Animator anim;
     private Vector2 moveInput;
     private Vector2 moveVelocity;
-
+    public bool isDashing = false;
     private float lastMoveX = 0f;
     private float lastMoveY = -1f; // Facing down initially
     public bool isStunned = false;
+    public Vector2 LastMoveDirection => new Vector2(lastMoveX, lastMoveY).normalized;
 
     void Start()
     {
@@ -26,6 +27,9 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!canMove)
         {
+            moveVelocity = Vector2.zero;
+            rb.velocity = Vector2.zero;
+            moveInput = Vector2.zero;
             anim.SetBool("isMoving", false);
             return;
         }
@@ -35,8 +39,12 @@ public class PlayerMovement : MonoBehaviour
             moveInput.x = Input.GetAxisRaw("Horizontal");
             moveInput.y = Input.GetAxisRaw("Vertical");
             moveVelocity = moveInput.normalized * moveSpeed;
-
-
+        }
+        else
+        {
+            moveInput = Vector2.zero;
+            moveVelocity = Vector2.zero;
+            rb.velocity = Vector2.zero;
         }
 
         bool isMoving = moveInput.sqrMagnitude > 0.1f;
@@ -52,14 +60,14 @@ public class PlayerMovement : MonoBehaviour
         anim.SetFloat("moveY", isMoving ? moveInput.y : lastMoveY);
     }
 
-    void FixedUpdate()
+
+   void FixedUpdate()
     {
-        if (canMove)
+        if (canMove && !isDashing)
         {
             rb.MovePosition(rb.position + moveVelocity * Time.fixedDeltaTime);
         }
     }
-    
     public void ApplyStun(float duration)
     {
         if (!isStunned)
