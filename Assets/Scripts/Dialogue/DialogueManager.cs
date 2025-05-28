@@ -227,9 +227,9 @@ public class DialogueManager : MonoBehaviour
 
     IEnumerator WaitToContinue()
     {
-        Debug.Log("Waiting for V to continue from: " + currentNode.name);
-        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.V));
-        yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.V));
+        Debug.Log("Waiting for Space to continue from: " + currentNode.name);
+        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space));
+        yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.Space));
 
         isWaitingForContinue = false;
 
@@ -255,7 +255,7 @@ public class DialogueManager : MonoBehaviour
         // Handle Simple Dialogue Mode
         if (simpleDialogueLines != null)
         {
-            if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
+            if (Input.GetKeyDown(KeyCode.Space) && typingCoroutine != null)
             {
                 StopCoroutine(typingCoroutine);
                 
@@ -277,7 +277,7 @@ public class DialogueManager : MonoBehaviour
 
 
         // Handle Node-Based Dialogue (standard NPC quests)
-        if (Input.GetKeyDown(KeyCode.V) && typingCoroutine != null)
+        if (Input.GetKeyDown(KeyCode.Space) && typingCoroutine != null)
         {
             
             StopCoroutine(typingCoroutine);
@@ -607,8 +607,8 @@ public class DialogueManager : MonoBehaviour
 
     IEnumerator WaitForSimpleContinue()
     {
-        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.V));
-        yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.V));
+        yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Space));
+        yield return new WaitUntil(() => Input.GetKeyUp(KeyCode.Space));
 
         isWaitingForContinue = false;
         simpleDialogueIndex++;

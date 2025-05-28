@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable
+public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -114,7 +114,21 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable
         Vector2 offset = Random.insideUnitCircle * patrolRadius;
         return startPosition + offset;
     }
+    public void Stagger(float duration)
+    {
+        if (!isAttacking && !isKnockedBack)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            StartCoroutine(ResumeAfterStagger(duration));
+        }
+    }
 
+private IEnumerator ResumeAfterStagger(float delay)
+{
+    yield return new WaitForSeconds(delay);
+    rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+}
     void ChasePlayer(Vector2 toPlayer)
     {
         Vector2 direction = player.position - transform.position;

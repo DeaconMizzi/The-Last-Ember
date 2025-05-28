@@ -250,14 +250,14 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 706659981846093760}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
+  m_Mass: 1000
   m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 1
+  m_AngularDrag: 0
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -265,7 +265,7 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
@@ -297,16 +297,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ddc42b25dfd46542954b7e249bce740, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1
+  moveSpeed: 3
   patrolRadius: 10
   chaseRange: 10
   attackCooldown: 1
   attackDuration: 2.9
   attackDamage: 2
-  verticalTolerance: 0.6
+  verticalTolerance: 0.5
   attackHitbox: {fileID: 5573884118596843121}
   desiredAttackDistance: 6.4
-  distanceTolerance: 0.4
+  distanceTolerance: 0.8
 --- !u!4 &706659981846093823 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5109466692193294758, guid: f514dc5893b678d43855e81712e63ea3, type: 3}
