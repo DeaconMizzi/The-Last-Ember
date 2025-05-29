@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Playables;
+using UnityEngine.SceneManagement;
 
 public class ElderDialogueTrigger : MonoBehaviour
 {
@@ -14,6 +15,8 @@ public class ElderDialogueTrigger : MonoBehaviour
     public Animator fadeAnimator; // ✅ Optional fade animator
     public string fadeOutTriggerName = "FadeOut"; // ✅ Trigger or state name to play
     public GameObject fadePanelObject; // ✅ Panel or canvas to activate before fading
+
+    public bool goToMenuAfterDialogue = false; // ✅ NEW: Optional toggle for menu transition
 
     private bool triggered = false;
 
@@ -52,13 +55,16 @@ public class ElderDialogueTrigger : MonoBehaviour
         if (director != null)
             director.Resume();
 
-        // ✅ Activate fade panel if assigned
         if (fadePanelObject != null)
             fadePanelObject.SetActive(true);
 
-        // ✅ Trigger fade after one frame
         if (fadeAnimator != null)
             StartCoroutine(PlayFadeOutDelayed());
+
+        if (goToMenuAfterDialogue)
+        {
+            SceneManager.LoadScene("Menu");
+        }
 
         gameObject.SetActive(false);
     }
@@ -68,5 +74,12 @@ public class ElderDialogueTrigger : MonoBehaviour
         yield return null; // wait one frame after enabling panel
         fadeAnimator.Play(fadeOutTriggerName);
         Debug.Log("🌙 FadeOut triggered after final dialogue (delayed).");
+    }
+
+    IEnumerator GoToMenuAfterFade()
+    {
+        yield return new WaitForSeconds(1.5f);
+         Debug.Log("➡️ Loading Menu scene...");
+        SceneManager.LoadScene("Menu");
     }
 }

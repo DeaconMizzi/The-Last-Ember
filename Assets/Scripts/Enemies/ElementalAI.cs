@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class ElementalAI : MonoBehaviour, IStaggerable
+public class ElementalAI : MonoBehaviour, IStaggerable, IRetreatable
 {
     [Header("Movement & Ranges")]
     public float moveSpeed = 1.5f;
@@ -16,6 +16,8 @@ public class ElementalAI : MonoBehaviour, IStaggerable
     public float attackWindupTime = 0.4f;
     public int attackDamage = 1;
     public float knockbackForce = 5f;
+    public float retreatDuration = 1f;
+    public float retreatDistance = 2f;
 
     [Header("Attack Hitbox")]
     public GameObject attackHitbox; // Assigned in Inspector
@@ -29,6 +31,9 @@ public class ElementalAI : MonoBehaviour, IStaggerable
     private Vector2 patrolTarget;
     private float lastAttackTime = -999f;
     private bool hasDealtDamageThisSwing = false;
+    private bool isInvulnerable = false;
+    public float invulnerabilityDuration = 0.5f;
+
     private enum State { Idle, Patrol, Chase, Attack }
     private State currentState = State.Patrol;
 
@@ -114,13 +119,13 @@ public class ElementalAI : MonoBehaviour, IStaggerable
         yield return new WaitForSeconds(attackWindupTime);
         lastAttackTime = Time.time;
         hasDealtDamageThisSwing = false;
+
+        TriggerRetreat();
     }
 
-    // Triggered by animation event
     public void DealDamage()
     {
-        if (hasDealtDamageThisSwing)
-            return;
+        if (hasDealtDamageThisSwing) return;
 
         hasDealtDamageThisSwing = true;
 
@@ -131,32 +136,54 @@ public class ElementalAI : MonoBehaviour, IStaggerable
         {
             if (hit.CompareTag("Player"))
             {
-                // Knockback
                 Vector2 knockbackDir = (hit.transform.position - transform.position).normalized;
                 Rigidbody2D prb = hit.GetComponent<Rigidbody2D>();
                 if (prb != null)
                     prb.AddForce(knockbackDir * knockbackForce, ForceMode2D.Impulse);
 
-                // Burn effect
                 Burnable burn = hit.GetComponent<Burnable>();
                 if (burn != null)
                     burn.ApplyBurn();
 
-                // Damage
                 PlayerHealth health = hit.GetComponent<PlayerHealth>();
                 if (health != null)
                     health.TakeDamage(attackDamage);
-
-                Debug.Log("🔥 Elemental hit player with burn + knockback.");
             }
         }
     }
 
+    public void TriggerRetreat()
+    {
+        StartCoroutine(RetreatRoutine());
+    }
 
-    // Animation events
+    private IEnumerator RetreatRoutine()
+    {
+        Vector2 retreatDirection = ((Vector2)transform.position - (Vector2)player.position).normalized;
+        float timer = 0f;
+
+        while (timer < retreatDuration)
+        {
+            rb.MovePosition(rb.position + retreatDirection * moveSpeed * Time.fixedDeltaTime);
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+    }
+
+    public void ApplyInvulnerability()
+    {
+        StartCoroutine(InvulnerabilityRoutine());
+    }
+
+    private IEnumerator InvulnerabilityRoutine()
+    {
+        isInvulnerable = true;
+        yield return new WaitForSeconds(invulnerabilityDuration);
+        isInvulnerable = false;
+    }
+
     public void EnableHitbox()
     {
-        Debug.Log("✅ Hitbox Enabled");
         if (attackHitbox != null)
         {
             attackHitbox.SetActive(true);
@@ -169,23 +196,25 @@ public class ElementalAI : MonoBehaviour, IStaggerable
 
     public void DisableHitbox()
     {
-        Debug.Log("❌ Hitbox Disabled");
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
     }
-   public void Stagger(float duration)
+
+    public void Stagger(float duration)
     {
         rb.velocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
         StartCoroutine(ResumeAfterStagger(duration));
+        TriggerRetreat();
     }
 
     private IEnumerator ResumeAfterStagger(float delay)
     {
         yield return new WaitForSeconds(delay);
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-}
-void OnDrawGizmosSelected()
+    }
+
+    void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);

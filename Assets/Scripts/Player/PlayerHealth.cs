@@ -45,7 +45,24 @@ public class PlayerHealth : MonoBehaviour
         if (currentHealth <= 0)
         {
             Die();
+            StartCoroutine(WaitAndLoadScene()); // Wait for animation and then load
         }
+    }
+    private IEnumerator WaitAndLoadScene()
+    {
+        Animator anim = GetComponent<Animator>();
+        if (anim != null)
+        {
+            // Wait for animation length
+            AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
+            yield return new WaitForSeconds(stateInfo.length);
+        }
+        else
+        {
+            yield return new WaitForSeconds(5f);
+        }
+
+        SceneManager.LoadScene("FinalScene_Bad");
     }
 
     public void Heal(int amount)
@@ -60,7 +77,7 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("Player died.");
         if (passiveHealingRoutine != null)
             StopCoroutine(passiveHealingRoutine);
-        // Freeze movement
+
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -68,29 +85,25 @@ public class PlayerHealth : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
         }
 
-        // Play animation
         Animator anim = GetComponent<Animator>();
         if (anim != null)
-            anim.SetTrigger("Die");
+        {
+            Debug.Log("Setting Die trigger.");
+            anim.ResetTrigger("Hurt"); // Prevent overlap
+            anim.ResetTrigger("Attack"); // Reset attack
+            anim.SetTrigger("Die"); // 🔥 Set the die trigger
+        }
 
-        // Lock movement
         PlayerMovement movement = GetComponent<PlayerMovement>();
         if (movement != null)
             movement.canMove = false;
 
-        // Lock combat
         PlayerCombat combat = GetComponent<PlayerCombat>();
         if (combat != null)
             combat.canAttack = false;
 
-        // Trigger any extra listeners
         OnDeath?.Invoke();
-
-        // Start cleanup
-        StartCoroutine(DeathCleanup());
-        SceneManager.LoadScene("FinalScene_Bad");
     }
-
 
     IEnumerator DeathCleanup()
     {

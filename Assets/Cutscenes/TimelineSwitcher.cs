@@ -41,14 +41,14 @@ public class TimelineSwitcher : MonoBehaviour
             director.playableAsset = neutralTimeline;
             director.Play();
             Debug.Log("🟡 Playing NEUTRAL timeline.");
-            StartCoroutine(SwitchSequence()); // ✅ Run coroutine for post-cutscene activation
+            StartCoroutine(SwitchSequence());
         }
         else if (ending == "BAD_ENDING" && badTimeline != null)
         {
             director.playableAsset = badTimeline;
             director.Play();
             Debug.Log("🔴 Playing BAD timeline.");
-            StartCoroutine(SwitchSequence()); // ✅ Same here
+            StartCoroutine(SwitchSequence()); 
         }
     }
     IEnumerator SwitchSequence()

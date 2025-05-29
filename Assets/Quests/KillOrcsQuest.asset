@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   questID: killorcs
   questName: Cull the Orcs
-  description: Eliminate the orc raiders threatening the glade
+  description: Eliminate the orc raiders threatening the glade!
   questType: 1
   objectives:
   - type: 2

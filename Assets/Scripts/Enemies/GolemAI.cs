@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
+public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable, IRetreatable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
     public float chaseRange = 10f;
     public float attackCooldown = 1.5f;
-    public float attackDuration = 1.2f; // Extended for safer coroutine timing
+    public float attackDuration = 1.2f;
     public int attackDamage = 1;
+    public float retreatDuration = 1f;
+    public float retreatDistance = 2f;
+    public float invulnerabilityDuration = 0.5f;
 
     private float lastAttackTime = 0f;
     private Vector2 patrolTarget;
@@ -23,6 +26,7 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
     private bool isKnockedBack = false;
     private float knockbackTimer = 0f;
     private bool isAttacking = false;
+    private bool isInvulnerable = false;
 
     private enum State { Patrol, Chase }
     private State currentState = State.Patrol;
@@ -81,7 +85,6 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
 
             if (!isAttacking && alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
-                Debug.Log("💥 AttackRoutine triggered");
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
             }
@@ -111,8 +114,6 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
     void ChasePlayer(Vector2 toPlayer)
     {
         Vector2 direction = player.position - transform.position;
-        float horizontalDistance = Mathf.Abs(direction.x);
-        float verticalDistance = Mathf.Abs(direction.y);
         float moveDir = Mathf.Sign(direction.x);
 
         Vector2 targetPos = new Vector2(
@@ -120,21 +121,10 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
             player.position.y
         );
 
-        if (horizontalDistance > desiredAttackDistance + distanceTolerance ||
-            horizontalDistance < desiredAttackDistance - distanceTolerance ||
-            verticalDistance > verticalTolerance)
-        {
-            MoveTo(targetPos);
-        }
-        else
-        {
-            rb.velocity = Vector2.zero;
-        }
+        MoveTo(targetPos);
 
         if (spriteRenderer != null)
-        {
             spriteRenderer.flipX = direction.x < 0;
-        }
     }
 
     void MoveTo(Vector2 target)
@@ -160,40 +150,74 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
+
+        TriggerRetreat();
     }
+
     public void TriggerSlam()
     {
-        Debug.Log("🔥 TriggerSlam() executing");
-
         if (slamZonePrefab != null)
         {
             float offsetX = spriteRenderer.flipX ? -1f : 1f;
             Vector3 slamPosition = transform.position + new Vector3(offsetX, 1f, 0f);
-
             Instantiate(slamZonePrefab, slamPosition, Quaternion.identity);
         }
+    }
+
+    public void TriggerRetreat()
+    {
+        StartCoroutine(RetreatRoutine());
+    }
+
+    private IEnumerator RetreatRoutine()
+    {
+        Vector2 retreatDirection = ((Vector2)transform.position - (Vector2)player.position).normalized;
+        float timer = 0f;
+
+        while (timer < retreatDuration)
+        {
+            rb.MovePosition(rb.position + retreatDirection * moveSpeed * Time.fixedDeltaTime);
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+    }
+
+    public void ApplyInvulnerability()
+    {
+        StartCoroutine(InvulnerabilityRoutine());
+    }
+
+    private IEnumerator InvulnerabilityRoutine()
+    {
+        isInvulnerable = true;
+        yield return new WaitForSeconds(invulnerabilityDuration);
+        isInvulnerable = false;
     }
 
     public void ApplyKnockback(float duration)
     {
         isKnockedBack = true;
         knockbackTimer = duration;
+        TriggerRetreat();
     }
 
-    void OnDrawGizmosSelected()
+    public void Stagger(float duration)
     {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, chaseRange);
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, patrolRadius);
-
-        Gizmos.color = Color.magenta;
-        Vector3 idealLeft = transform.position + Vector3.left * desiredAttackDistance;
-        Vector3 idealRight = transform.position + Vector3.right * desiredAttackDistance;
-        Gizmos.DrawLine(transform.position, idealLeft);
-        Gizmos.DrawLine(transform.position, idealRight);
+        if (!isAttacking && !isKnockedBack)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            StartCoroutine(ResumeAfterStagger(duration));
+            TriggerRetreat();
+        }
     }
+
+    private IEnumerator ResumeAfterStagger(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+    }
+
     public void ApplyReforgedScaling()
     {
         attackDamage += 1;
@@ -205,17 +229,15 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
             health.currentHealth += 2;
         }
     }
-    private bool isStunned = false;
 
     public void Stun(float duration)
     {
-        if (!isStunned)
+        if (!isKnockedBack)
             StartCoroutine(StunRoutine(duration));
     }
 
     private IEnumerator StunRoutine(float duration)
     {
-        isStunned = true;
         rb.velocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
         if (anim != null)
@@ -223,22 +245,6 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
 
         yield return new WaitForSeconds(duration);
 
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-        isStunned = false;
-    }
-    public void Stagger(float duration)
-    {
-        if (!isAttacking && !isKnockedBack)
-        {
-            rb.velocity = Vector2.zero;
-            rb.constraints = RigidbodyConstraints2D.FreezeAll;
-            StartCoroutine(ResumeAfterStagger(duration));
-        }
-    }
-
-    private IEnumerator ResumeAfterStagger(float delay)
-    {
-        yield return new WaitForSeconds(delay);
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
 }

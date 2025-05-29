@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
+public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable, IRetreatable
 {
     private bool isDead = false;
     public float moveSpeed = 2f;
@@ -12,6 +12,9 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
     public float attackCooldown = 1f;
     public float attackDuration = 1.1f;
     public int attackDamage = 1;
+    public float retreatDuration = 1f;
+    public float retreatDistance = 2f;
+    public float invulnerabilityDuration = 0.5f;
 
     private float lastAttackTime = 0f;
     private Vector2 patrolTarget;
@@ -24,6 +27,7 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
     private bool isKnockedBack = false;
     private float knockbackTimer = 0f;
     private bool isAttacking = false;
+    private bool isInvulnerable = false;
 
     private enum State { Patrol, Chase }
     private State currentState = State.Patrol;
@@ -40,7 +44,6 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
 
     private Vector3 baseHitboxOffset;
 
-    // --- Curve-based movement additions ---
     private bool isCircling = false;
     private float circleAngle = 0f;
     public float circleSpeed = 1.5f;
@@ -63,22 +66,20 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
 
     void Update()
     {
-         if (isDead) return;
+        if (isDead) return;
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         State newState = (distanceToPlayer <= chaseRange) ? State.Chase : State.Patrol;
 
-        // Reset circling when leaving chase
         if (newState != State.Chase && isCircling)
         {
             isCircling = false;
             circleAngle = 0f;
         }
 
-        // Start circling
         if (newState == State.Chase && !isCircling)
         {
             Vector2 dir = (transform.position - player.position).normalized;
-            circleAngle = Mathf.Atan2(dir.y, dir.x); // angle in radians
+            circleAngle = Mathf.Atan2(dir.y, dir.x);
             isCircling = true;
         }
 
@@ -87,24 +88,10 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
         if (anim != null)
             anim.SetBool("IsWalking", currentState == State.Patrol || currentState == State.Chase);
     }
-    public void Stagger(float duration)
-    {
-        if (!isAttacking && !isKnockedBack)
-        {
-            rb.velocity = Vector2.zero;
-            rb.constraints = RigidbodyConstraints2D.FreezeAll;
-            StartCoroutine(ResumeAfterStagger(duration));
-        }
-    }
 
-    private IEnumerator ResumeAfterStagger(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-    }
     void FixedUpdate()
     {
-         if (isDead) return;
+        if (isDead) return;
         if (isKnockedBack)
         {
             knockbackTimer -= Time.fixedDeltaTime;
@@ -128,7 +115,6 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
 
             if (!isAttacking && alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
-                Debug.Log("🔁 Triggering Jab Animation");
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
             }
@@ -159,7 +145,6 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
     {
         if (!isCircling) return;
 
-        // Step around the player in a circular arc
         circleAngle += circleSpeed * Time.fixedDeltaTime;
 
         Vector2 orbitPos = new Vector2(
@@ -169,11 +154,9 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
 
         MoveTo(orbitPos);
 
-        // Flip sprite for facing
         if (spriteRenderer != null)
             spriteRenderer.flipX = (player.position.x < transform.position.x);
 
-        // Flip and offset hitbox
         if (attackHitbox != null)
         {
             Vector3 scale = attackHitbox.transform.localScale;
@@ -210,26 +193,62 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
+
+        TriggerRetreat();
     }
 
-    public void EnableHitbox()
+    public void TriggerRetreat()
     {
-        Debug.Log("✅ Hitbox Enabled");
-        if (attackHitbox != null)
-        {
-            attackHitbox.SetActive(true);
+        StartCoroutine(RetreatRoutine());
+    }
 
-            var hitboxScript = attackHitbox.GetComponent<EnemyWeaponHitbox>();
-            if (hitboxScript != null)
-                hitboxScript.ResetHit();
+    private IEnumerator RetreatRoutine()
+    {
+        Vector2 retreatDirection = ((Vector2)transform.position - (Vector2)player.position).normalized;
+        float timer = 0f;
+
+        while (timer < retreatDuration)
+        {
+            rb.MovePosition(rb.position + retreatDirection * moveSpeed * Time.fixedDeltaTime);
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
         }
     }
 
-    public void DisableHitbox()
+    public void ApplyInvulnerability()
     {
-        Debug.Log("❌ Hitbox Disabled");
-        if (attackHitbox != null)
-            attackHitbox.SetActive(false);
+        StartCoroutine(InvulnerabilityRoutine());
+    }
+
+    private IEnumerator InvulnerabilityRoutine()
+    {
+        isInvulnerable = true;
+        yield return new WaitForSeconds(invulnerabilityDuration);
+        isInvulnerable = false;
+    }
+
+    public void Stagger(float duration)
+    {
+        if (!isAttacking && !isKnockedBack)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            StartCoroutine(ResumeAfterStagger(duration));
+            TriggerRetreat();
+        }
+    }
+
+    private IEnumerator ResumeAfterStagger(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+    }
+
+    public void ApplyKnockback(float duration)
+    {
+        isKnockedBack = true;
+        knockbackTimer = duration;
+        TriggerRetreat();
     }
 
     public void PlayHurtAnimation()
@@ -238,27 +257,12 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
         {
             anim.ResetTrigger("Hurt");
             anim.SetTrigger("Hurt");
-            StartCoroutine(ResetHurtTrigger());
         }
-    }
-
-    private IEnumerator ResetHurtTrigger()
-    {
-        yield return new WaitForSeconds(0.6f); // Match actual hurt animation length
-        anim.ResetTrigger("Hurt");
-    }
-
-    public void ApplyKnockback(float duration)
-    {
-        isKnockedBack = true;
-        knockbackTimer = duration;
-
-        PlayHurtAnimation(); // Trigger hurt visual
     }
 
     public void PlayDeathAnimation()
     {
-        if (isDead) return; // ✅ Prevent multiple calls
+        if (isDead) return;
         isDead = true;
 
         if (anim != null)
@@ -274,79 +278,9 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
     private IEnumerator HandleDeath()
     {
         yield return new WaitForSeconds(1f);
-        Destroy(gameObject); // Or disable for pooling
+        Destroy(gameObject);
     }
 
-    void OnDrawGizmosSelected()
-    {
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponent<SpriteRenderer>();
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, chaseRange);
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, patrolRadius);
-
-        // Attack position lines
-        Gizmos.color = Color.magenta;
-        Vector3 idealLeft = transform.position + Vector3.left * desiredAttackDistance;
-        Vector3 idealRight = transform.position + Vector3.right * desiredAttackDistance;
-        Gizmos.DrawLine(transform.position, idealLeft);
-        Gizmos.DrawLine(transform.position, idealRight);
-
-        // Hitbox
-        if (attackHitbox != null)
-        {
-            Gizmos.color = Color.cyan;
-            Vector3 center = attackHitbox.transform.position;
-            BoxCollider2D col = attackHitbox.GetComponent<BoxCollider2D>();
-            if (col != null)
-                Gizmos.DrawWireCube(center, col.size);
-        }
-
-#if UNITY_EDITOR
-        // Try to find player if not set
-        if (player == null)
-        {
-            GameObject found = GameObject.FindGameObjectWithTag("Player");
-            if (found != null) player = found.transform;
-        }
-
-        if (player != null)
-        {
-            // Orbit circle
-            Gizmos.color = new Color(1f, 0.5f, 0f, 0.7f);
-            const int segments = 32;
-            Vector3 lastPoint = player.position + new Vector3(Mathf.Cos(0) * circleRadius, Mathf.Sin(0) * circleRadius, 0);
-            for (int i = 1; i <= segments; i++)
-            {
-                float theta = i * Mathf.PI * 2f / segments;
-                Vector3 nextPoint = player.position + new Vector3(Mathf.Cos(theta) * circleRadius, Mathf.Sin(theta) * circleRadius, 0);
-                Gizmos.DrawLine(lastPoint, nextPoint);
-                lastPoint = nextPoint;
-            }
-
-            // Target orbit point
-            Gizmos.color = Color.red;
-            Vector3 target = player.position + new Vector3(Mathf.Cos(circleAngle), Mathf.Sin(circleAngle), 0) * circleRadius;
-            Gizmos.DrawSphere(target, 0.1f);
-
-            // Attack distance
-            Gizmos.color = Color.white;
-            Gizmos.DrawWireSphere(player.position, desiredAttackDistance);
-
-            // Vertical tolerance band
-            Gizmos.color = new Color(0f, 0.8f, 1f, 0.4f);
-            float yMin = player.position.y - verticalTolerance;
-            float yMax = player.position.y + verticalTolerance;
-            Vector3 bandStart = new Vector3(player.position.x - desiredAttackDistance * 2, yMin, 0);
-            Vector3 bandEnd = new Vector3(player.position.x + desiredAttackDistance * 2, yMax, 0);
-            Gizmos.DrawLine(new Vector3(bandStart.x, yMin, 0), new Vector3(bandEnd.x, yMin, 0));
-            Gizmos.DrawLine(new Vector3(bandStart.x, yMax, 0), new Vector3(bandEnd.x, yMax, 0));
-        }
-#endif
-    }
     public void ApplyReforgedScaling()
     {
         attackDamage += 1;
@@ -358,17 +292,15 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
             health.currentHealth += 2;
         }
     }
-    private bool isStunned = false;
 
     public void Stun(float duration)
     {
-        if (!isStunned)
+        if (!isKnockedBack)
             StartCoroutine(StunRoutine(duration));
     }
 
     private IEnumerator StunRoutine(float duration)
     {
-        isStunned = true;
         rb.velocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
         if (anim != null)
@@ -377,7 +309,24 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
         yield return new WaitForSeconds(duration);
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-        isStunned = false;
     }
 
+    public void EnableHitbox()
+    {
+        if (isDead) return;
+
+        if (attackHitbox != null)
+        {
+            attackHitbox.SetActive(true);
+            var hitboxScript = attackHitbox.GetComponent<EnemyWeaponHitbox>();
+            if (hitboxScript != null)
+                hitboxScript.ResetHit();
+        }
+    }
+
+    public void DisableHitbox()
+    {
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+    }
 }

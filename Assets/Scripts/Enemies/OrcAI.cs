@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
+public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable, IRetreatable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -11,6 +11,9 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
     public float attackCooldown = 1.5f;
     public float attackDuration = 0.6f;
     public int attackDamage = 1;
+    public float retreatDuration = 1f;
+    public float retreatDistance = 2f;
+    public float circleSpeed = 1.5f;
 
     private float lastAttackTime = 0f;
     private Vector2 patrolTarget;
@@ -23,6 +26,9 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
     private bool isKnockedBack = false;
     private float knockbackTimer = 0f;
     private bool isAttacking = false;
+    private bool isCircling = false;
+    private bool isDead = false;
+    private float circleAngle = 0f;
 
     private enum State { Patrol, Chase }
     private State currentState = State.Patrol;
@@ -56,6 +62,8 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
 
     void Update()
     {
+        if (isDead) return;
+
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         currentState = (distanceToPlayer <= chaseRange) ? State.Chase : State.Patrol;
 
@@ -65,6 +73,8 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
 
     void FixedUpdate()
     {
+        if (isDead) return;
+
         if (isKnockedBack)
         {
             knockbackTimer -= Time.fixedDeltaTime;
@@ -84,17 +94,53 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
             bool alignedHorizontally = horizontalDist <= desiredAttackDistance + distanceTolerance;
             bool verticallyClose = verticalDist <= verticalTolerance;
 
-            ChasePlayer(toPlayer);
+            float moveDir = Mathf.Sign(toPlayer.x);
+            Vector2 targetPos = new Vector2(
+                player.position.x - moveDir * desiredAttackDistance,
+                player.position.y
+            );
+
+            if (!isCircling)
+            {
+                Vector2 dir = (transform.position - player.position).normalized;
+                circleAngle = Mathf.Atan2(dir.y, dir.x);
+                isCircling = true;
+            }
+
+            circleAngle += circleSpeed * Time.fixedDeltaTime;
+
+            Vector2 orbitPos = new Vector2(
+                player.position.x + Mathf.Cos(circleAngle) * desiredAttackDistance,
+                player.position.y + Mathf.Sin(circleAngle) * desiredAttackDistance
+            );
+
+            Vector2 blendedTarget = Vector2.Lerp(orbitPos, targetPos, 0.5f);
+
+            MoveTo(blendedTarget);
+
+            if (spriteRenderer != null)
+                spriteRenderer.flipX = (player.position.x < transform.position.x);
+
+            if (attackHitbox != null)
+            {
+                Vector3 scale = attackHitbox.transform.localScale;
+                scale.x = spriteRenderer.flipX ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
+                attackHitbox.transform.localScale = scale;
+
+                Vector3 flippedOffset = baseHitboxOffset;
+                flippedOffset.x = spriteRenderer.flipX ? -Mathf.Abs(baseHitboxOffset.x) : Mathf.Abs(baseHitboxOffset.x);
+                attackHitbox.transform.localPosition = flippedOffset;
+            }
 
             if (!isAttacking && alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
-                Debug.Log("💥 Triggering attack!");
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
             }
         }
         else
         {
+            isCircling = false;
             Patrol();
         }
     }
@@ -114,77 +160,17 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable
         Vector2 offset = Random.insideUnitCircle * patrolRadius;
         return startPosition + offset;
     }
-    public void Stagger(float duration)
-    {
-        if (!isAttacking && !isKnockedBack)
-        {
-            rb.velocity = Vector2.zero;
-            rb.constraints = RigidbodyConstraints2D.FreezeAll;
-            StartCoroutine(ResumeAfterStagger(duration));
-        }
-    }
-
-private IEnumerator ResumeAfterStagger(float delay)
-{
-    yield return new WaitForSeconds(delay);
-    rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-}
-    void ChasePlayer(Vector2 toPlayer)
-    {
-        Vector2 direction = player.position - transform.position;
-        float horizontalDistance = Mathf.Abs(direction.x);
-        float verticalDistance = Mathf.Abs(direction.y);
-        float moveDir = Mathf.Sign(direction.x);
-
-        Vector2 targetPos = new Vector2(
-            player.position.x - moveDir * desiredAttackDistance,
-            player.position.y
-        );
-
-        if (horizontalDistance > desiredAttackDistance + distanceTolerance ||
-            horizontalDistance < desiredAttackDistance - distanceTolerance ||
-            verticalDistance > verticalTolerance)
-        {
-            MoveTo(targetPos);
-        }
-        else
-        {
-            rb.velocity = Vector2.zero;
-        }
-
-        // Flip sprite
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.flipX = direction.x < 0;
-        }
-
-        // Flip hitbox
-        if (attackHitbox != null)
-        {
-            // Flip scale
-            Vector3 scale = attackHitbox.transform.localScale;
-            scale.x = spriteRenderer.flipX ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x);
-            attackHitbox.transform.localScale = scale;
-
-            // Flip position X, preserve Y and Z from prefab
-            Vector3 flippedOffset = baseHitboxOffset;
-            flippedOffset.x = spriteRenderer.flipX ? -Mathf.Abs(baseHitboxOffset.x) : Mathf.Abs(baseHitboxOffset.x);
-            attackHitbox.transform.localPosition = flippedOffset;
-        }
-    }
 
     void MoveTo(Vector2 target)
     {
         Vector2 direction = (target - (Vector2)transform.position).normalized;
-
-        if (spriteRenderer != null && direction.x != 0)
-            spriteRenderer.flipX = direction.x < 0;
-
         rb.MovePosition(rb.position + direction * moveSpeed * Time.fixedDeltaTime);
     }
 
     IEnumerator AttackRoutine()
     {
+        if (isDead) yield break;
+
         isAttacking = true;
         rb.velocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
@@ -194,16 +180,65 @@ private IEnumerator ResumeAfterStagger(float delay)
 
         yield return new WaitForSeconds(attackDuration);
 
+        if (isDead) yield break;
+
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
+
+        TriggerRetreat();
+    }
+
+    public void TriggerRetreat()
+    {
+        if (isDead) return;
+        StartCoroutine(RetreatRoutine());
+    }
+
+    private IEnumerator RetreatRoutine()
+    {
+        if (isDead) yield break;
+
+        Vector2 retreatDirection = ((Vector2)transform.position - (Vector2)player.position).normalized;
+        float timer = 0f;
+
+        while (timer < retreatDuration)
+        {
+            if (isDead) yield break;
+            rb.MovePosition(rb.position + retreatDirection * moveSpeed * Time.fixedDeltaTime);
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+    }
+
+    public void OnDeath()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        rb.velocity = Vector2.zero;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
+
+        StopAllCoroutines(); // Stop all movement and attack coroutines
+
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.SetTrigger("Death");
+            anim.SetBool("IsWalking", false);
+        }
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+            
     }
 
     public void EnableHitbox()
     {
+        if (isDead) return;
+
         if (attackHitbox != null)
         {
             attackHitbox.SetActive(true);
-
             var hitboxScript = attackHitbox.GetComponent<EnemyWeaponHitbox>();
             if (hitboxScript != null)
                 hitboxScript.ResetHit();
@@ -216,35 +251,67 @@ private IEnumerator ResumeAfterStagger(float delay)
             attackHitbox.SetActive(false);
     }
 
-    public void ApplyKnockback(float duration)
+    public void Stagger(float duration)
     {
-        isKnockedBack = true;
-        knockbackTimer = duration;
-    }
+        if (isDead) return;
 
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, chaseRange);
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, patrolRadius);
-
-        Gizmos.color = Color.magenta;
-        Vector3 idealLeft = transform.position + Vector3.left * desiredAttackDistance;
-        Vector3 idealRight = transform.position + Vector3.right * desiredAttackDistance;
-        Gizmos.DrawLine(transform.position, idealLeft);
-        Gizmos.DrawLine(transform.position, idealRight);
-
-        if (spriteRenderer != null && attackHitbox != null)
+        if (!isAttacking && !isKnockedBack)
         {
-            Gizmos.color = Color.cyan;
-            Vector3 center = attackHitbox.transform.position;
-            BoxCollider2D col = attackHitbox.GetComponent<BoxCollider2D>();
-            if (col != null)
-                Gizmos.DrawWireCube(center, col.size);
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            StartCoroutine(ResumeAfterStagger(duration));
+            TriggerRetreat();
         }
     }
+
+    private IEnumerator ResumeAfterStagger(float delay)
+    {
+        if (isDead) yield break;
+
+        yield return new WaitForSeconds(delay);
+
+        if (isDead) yield break;
+
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+    }
+
+    public void ApplyKnockback(float duration)
+    {
+        if (isDead) return;
+
+        isKnockedBack = true;
+        knockbackTimer = duration;
+        TriggerRetreat();
+    }
+
+    private bool isStunned = false;
+
+    public void Stun(float duration)
+    {
+        if (isDead) return;
+
+        if (!isStunned)
+            StartCoroutine(StunRoutine(duration));
+    }
+
+    private IEnumerator StunRoutine(float duration)
+    {
+        if (isDead) yield break;
+
+        isStunned = true;
+        rb.velocity = Vector2.zero;
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        if (anim != null)
+            anim.SetBool("IsWalking", false);
+
+        yield return new WaitForSeconds(duration);
+
+        if (isDead) yield break;
+
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        isStunned = false;
+    }
+
     public void ApplyReforgedScaling()
     {
         attackDamage += 1;
@@ -255,26 +322,5 @@ private IEnumerator ResumeAfterStagger(float delay)
             health.maxHealth += 2;
             health.currentHealth += 2;
         }
-    }
-    private bool isStunned = false;
-
-    public void Stun(float duration)
-    {
-        if (!isStunned)
-            StartCoroutine(StunRoutine(duration));
-    }
-
-    private IEnumerator StunRoutine(float duration)
-    {
-        isStunned = true;
-        rb.velocity = Vector2.zero;
-        rb.constraints = RigidbodyConstraints2D.FreezeAll;
-        if (anim != null)
-            anim.SetBool("IsWalking", false);
-
-        yield return new WaitForSeconds(duration);
-
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-        isStunned = false;
     }
 }

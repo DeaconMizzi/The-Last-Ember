@@ -7,23 +7,28 @@ public class EnemyHealth : MonoBehaviour
     public int maxHealth = 3;
     public int currentHealth;
     private bool isDead = false;
-
+    private bool isInvulnerable = false;
+    public float invulnerabilityDuration = 0.5f;
     public EnemyType enemyType;
     private Animator animator;
 
     [Header("Boss Flags")]
     public bool isBranhalm = false;
-
+    [Header("Death Settings")]
+    public float destroyDelay = 1.5f;
     void Start()
     {
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
     }
 
-    public void TakeDamage(int amount, Vector2 knockbackDirection, float knockbackForce)
+   public void TakeDamage(int amount, Vector2 knockbackDirection, float knockbackForce)
     {
+        if (isInvulnerable) return;
+
         currentHealth -= amount;
         Debug.Log($"{enemyType} took {amount} damage!");
+
         GetComponent<Rigidbody2D>()?.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
 
         IStaggerable staggerTarget = GetComponent<IStaggerable>();
@@ -32,20 +37,21 @@ public class EnemyHealth : MonoBehaviour
             staggerTarget.Stagger(1f);
         }
 
-        if (animator != null)
-        {
-            animator.SetTrigger("Hurt");
-        }
+        StartCoroutine(InvulnerabilityRoutine());
+        GetComponent<Animator>()?.SetTrigger("Hurt");
 
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        if (currentHealth <= 0) Die();
     }
 
+    private IEnumerator InvulnerabilityRoutine()
+    {
+        isInvulnerable = true;
+        yield return new WaitForSeconds(invulnerabilityDuration);
+        isInvulnerable = false;
+    }
     void Die()
     {
-        if (isDead) return; // ✅ Prevent multiple calls
+        if (isDead) return;
         isDead = true;
 
         Debug.Log($"{enemyType} died!");
@@ -73,6 +79,6 @@ public class EnemyHealth : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
         }
 
-        Destroy(gameObject, 1.5f);
+        Destroy(gameObject, destroyDelay);
     }
 }

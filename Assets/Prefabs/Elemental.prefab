@@ -261,7 +261,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.0025457442, y: 0.34009948}
+  m_Offset: {x: -0.0025457442, y: 0.33905807}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.38}
@@ -272,7 +272,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.60484904, y: 0.72472185}
+  m_Size: {x: 0.60484904, y: 0.82679373}
   m_EdgeRadius: 0
 --- !u!114 &3590392735714783467
 MonoBehaviour:
@@ -288,8 +288,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 6
   currentHealth: 6
+  invulnerabilityDuration: 0.5
   enemyType: 5
   isBranhalm: 0
+  destroyDelay: 1.5
 --- !u!114 &5596956104207761453
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -310,4 +312,7 @@ MonoBehaviour:
   attackWindupTime: 0.4
   attackDamage: 1
   knockbackForce: 5
+  retreatDuration: 1
+  retreatDistance: 2
   attackHitbox: {fileID: 1307229327926933474}
+  invulnerabilityDuration: 0.5

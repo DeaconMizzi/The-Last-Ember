@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
+public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable, IRetreatable
 {
     public float moveSpeed = 2f;
     public float patrolRadius = 4f;
@@ -11,6 +11,8 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
     public float attackCooldown = 1.5f;
     public float attackDuration = 0.6f;
     public int attackDamage = 1;
+    public float retreatDuration = 1f;
+    public float retreatDistance = 2f;
 
     private float lastAttackTime = 0f;
     private Vector2 patrolTarget;
@@ -23,6 +25,8 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
     private bool isKnockedBack = false;
     private float knockbackTimer = 0f;
     private bool isAttacking = false;
+    private bool isInvulnerable = false;
+    public float invulnerabilityDuration = 0.5f;
 
     private enum State { Patrol, Chase }
     private State currentState = State.Patrol;
@@ -83,7 +87,6 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
 
             if (!isAttacking && alignedHorizontally && verticallyClose && Time.time - lastAttackTime > attackCooldown)
             {
-                Debug.Log("💥 Triggering attack!");
                 StartCoroutine(AttackRoutine());
                 lastAttackTime = Time.time;
             }
@@ -113,33 +116,18 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
     void ChasePlayer(Vector2 toPlayer)
     {
         Vector2 direction = player.position - transform.position;
-        float horizontalDistance = Mathf.Abs(direction.x);
-        float verticalDistance = Mathf.Abs(direction.y);
         float moveDir = Mathf.Sign(direction.x);
 
         Vector2 targetPos = new Vector2(
             player.position.x - moveDir * desiredAttackDistance,
-            player.position.y // <-- Add this to match Y
+            player.position.y
         );
 
-        if (horizontalDistance > desiredAttackDistance + distanceTolerance ||
-            horizontalDistance < desiredAttackDistance - distanceTolerance ||
-            verticalDistance > verticalTolerance)
-        {
-            MoveTo(targetPos);
-        }
-        else
-        {
-            rb.velocity = Vector2.zero;
-        }
+        MoveTo(targetPos);
 
-        // Flip sprite
         if (spriteRenderer != null)
-        {
             spriteRenderer.flipX = direction.x < 0;
-        }
 
-        // Flip and position hitbox
         if (attackHitbox != null)
         {
             Vector3 scale = attackHitbox.transform.localScale;
@@ -150,6 +138,7 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
             attackHitbox.transform.localPosition = spriteRenderer.flipX ? -offset : offset;
         }
     }
+
     void MoveTo(Vector2 target)
     {
         Vector2 direction = (target - (Vector2)transform.position).normalized;
@@ -173,6 +162,38 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         isAttacking = false;
+
+        TriggerRetreat();
+    }
+
+    public void TriggerRetreat()
+    {
+        StartCoroutine(RetreatRoutine());
+    }
+
+    private IEnumerator RetreatRoutine()
+    {
+        Vector2 retreatDirection = ((Vector2)transform.position - (Vector2)player.position).normalized;
+        float timer = 0f;
+
+        while (timer < retreatDuration)
+        {
+            rb.MovePosition(rb.position + retreatDirection * moveSpeed * Time.fixedDeltaTime);
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+    }
+
+    public void ApplyInvulnerability()
+    {
+        StartCoroutine(InvulnerabilityRoutine());
+    }
+
+    private IEnumerator InvulnerabilityRoutine()
+    {
+        isInvulnerable = true;
+        yield return new WaitForSeconds(invulnerabilityDuration);
+        isInvulnerable = false;
     }
 
     public void EnableHitbox()
@@ -197,7 +218,9 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
     {
         isKnockedBack = true;
         knockbackTimer = duration;
+        TriggerRetreat();
     }
+
     public void Stagger(float duration)
     {
         if (!isAttacking && !isKnockedBack)
@@ -205,6 +228,7 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
             rb.velocity = Vector2.zero;
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
             StartCoroutine(ResumeAfterStagger(duration));
+            TriggerRetreat();
         }
     }
 
@@ -213,30 +237,7 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
         yield return new WaitForSeconds(delay);
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, chaseRange);
 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, patrolRadius);
-
-        Gizmos.color = Color.magenta;
-        Vector3 idealLeft = transform.position + Vector3.left * desiredAttackDistance;
-        Vector3 idealRight = transform.position + Vector3.right * desiredAttackDistance;
-        Gizmos.DrawLine(transform.position, idealLeft);
-        Gizmos.DrawLine(transform.position, idealRight);
-
-        if (spriteRenderer != null && attackHitbox != null)
-        {
-            Gizmos.color = Color.cyan;
-            Vector3 center = attackHitbox.transform.position;
-            BoxCollider2D col = attackHitbox.GetComponent<BoxCollider2D>();
-            if (col != null)
-                Gizmos.DrawWireCube(center, col.size);
-        }
-    }
-    
     public void ApplyReforgedScaling()
     {
         attackDamage += 1;
@@ -248,5 +249,4 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable
             health.currentHealth += 2;
         }
     }
-
 }
