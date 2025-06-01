@@ -249,4 +249,27 @@ public class EnemyBranhalm : MonoBehaviour, IDominionScalable, IStaggerable, IRe
             health.currentHealth += 2;
         }
     }
+    public void OnDeath()
+    {
+        // Freeze rigidbody
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+
+        // Stop AI behavior
+        StopAllCoroutines();
+
+        // Play death animation (optional)
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.SetTrigger("Death");
+            anim.SetBool("IsWalking", false);
+        }
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+    }
 }

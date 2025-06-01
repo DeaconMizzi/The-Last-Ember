@@ -225,4 +225,27 @@ public class ElementalAI : MonoBehaviour, IStaggerable, IRetreatable
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, patrolRadius);
     }
+    public void OnDeath()
+    {
+        // Freeze rigidbody
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+
+        // Stop AI behavior
+        StopAllCoroutines();
+
+        // Play death animation (optional)
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.SetBool("IsWalking", false);
+            anim.SetTrigger("Death");
+        }
+
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+    }
 }

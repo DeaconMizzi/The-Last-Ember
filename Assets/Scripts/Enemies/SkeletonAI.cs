@@ -260,27 +260,6 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
         }
     }
 
-    public void PlayDeathAnimation()
-    {
-        if (isDead) return;
-        isDead = true;
-
-        if (anim != null)
-        {
-            anim.SetBool("Death", true);
-            rb.velocity = Vector2.zero;
-            rb.constraints = RigidbodyConstraints2D.FreezeAll;
-        }
-
-        StartCoroutine(HandleDeath());
-    }
-
-    private IEnumerator HandleDeath()
-    {
-        yield return new WaitForSeconds(1f);
-        Destroy(gameObject);
-    }
-
     public void ApplyReforgedScaling()
     {
         attackDamage += 1;
@@ -326,6 +305,32 @@ public class SkeletonAI : MonoBehaviour, IDominionScalable, IStunnable, IStagger
 
     public void DisableHitbox()
     {
+        if (attackHitbox != null)
+            attackHitbox.SetActive(false);
+    }
+    public void OnDeath()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        // Freeze rigidbody
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+
+        // Stop AI behavior
+        StopAllCoroutines();
+
+        // Play death animation
+        if (anim != null)
+        {
+            anim.SetBool("Death", true);
+            anim.SetBool("IsWalking", false);
+        }
+
+        // Disable attack hitbox
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
     }

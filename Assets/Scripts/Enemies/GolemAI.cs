@@ -247,4 +247,24 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
+    public void OnDeath()
+    {
+        // Freeze rigidbody
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+
+        // Stop AI behavior
+        StopAllCoroutines();
+
+        // Play death animation (optional)
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.SetTrigger("Death");
+            anim.SetBool("IsWalking", false);
+        }
+    }
 }

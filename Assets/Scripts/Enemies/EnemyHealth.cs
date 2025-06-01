@@ -68,9 +68,7 @@ public class EnemyHealth : MonoBehaviour
             animator.SetTrigger("Death");
         }
 
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null) col.enabled = false;
-
+        // Freeze rigidbody completely
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -78,6 +76,13 @@ public class EnemyHealth : MonoBehaviour
             rb.gravityScale = 0f;
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
         }
+
+        // Disable colliders if you want (optional)
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        // Tell AI scripts to stop
+        SendMessage("OnDeath", SendMessageOptions.DontRequireReceiver);
 
         Destroy(gameObject, destroyDelay);
     }

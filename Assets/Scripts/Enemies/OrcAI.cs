@@ -215,10 +215,12 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable,
         if (isDead) return;
         isDead = true;
 
+        // Freeze rigidbody
         rb.velocity = Vector2.zero;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
 
-        StopAllCoroutines(); // Stop all movement and attack coroutines
+        // Stop all AI behavior
+        StopAllCoroutines();
 
         if (anim != null)
         {
@@ -229,7 +231,6 @@ public class OrcAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerable,
 
         if (attackHitbox != null)
             attackHitbox.SetActive(false);
-            
     }
 
     public void EnableHitbox()
