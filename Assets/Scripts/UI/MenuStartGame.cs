@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class MenuStartGame : MonoBehaviour
 {
-    [SerializeField] private string mainSceneName = "SampleScene"; // Set your scene name in Inspector
+    [SerializeField] private string mainSceneName = "SampleScene";
 
     public void StartGame()
     {
@@ -15,7 +15,7 @@ public class MenuStartGame : MonoBehaviour
 
     public void QuitGame()
     {
-        Debug.Log("Quit Game"); // Will only show in editor
-        Application.Quit();     // Will work in a built version
+        Debug.Log("Quit Game"); 
+        Application.Quit();    
     }
 }

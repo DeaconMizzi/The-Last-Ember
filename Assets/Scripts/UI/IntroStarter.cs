@@ -8,7 +8,7 @@ public class IntroStarter : MonoBehaviour
     public PlayableDirector director;
     public PlayerMovement playerMovement;
 
-    public GameObject introCanvas; // Assign this in the Inspector
+    public GameObject introCanvas;
 
     void Start()
     {

@@ -25,7 +25,7 @@ public class EmberActivator : MonoBehaviour
         if (emberCollider != null)
         {
             emberCollider.enabled = false;
-            Debug.Log("[EmberActivator] ❌ Collider disabled at start");
+            Debug.Log("[EmberActivator] Collider disabled at start");
         }
 
         foreach (var comp in interactionComponents)
@@ -33,14 +33,14 @@ public class EmberActivator : MonoBehaviour
             if (comp != null)
             {
                 comp.enabled = false;
-                Debug.Log($"[EmberActivator] ❌ Disabled on Awake → {comp.GetType().Name}");
+                Debug.Log($"[EmberActivator] Disabled on Awake → {comp.GetType().Name}");
             }
         }
 
         if (promptUI != null)
         {
             promptUI.SetActive(false);
-            Debug.Log("[EmberActivator] ❌ Prompt UI hidden at start");
+            Debug.Log("[EmberActivator] Prompt UI hidden at start");
         }
     }
 
@@ -62,7 +62,7 @@ public class EmberActivator : MonoBehaviour
             if (emberCollider != null && !emberCollider.enabled)
             {
                 emberCollider.enabled = true;
-                Debug.Log("[EmberActivator] ✅ Collider enabled");
+                Debug.Log("[EmberActivator] Collider enabled");
             }
 
             foreach (var comp in interactionComponents)
@@ -70,14 +70,14 @@ public class EmberActivator : MonoBehaviour
                 if (comp != null && !comp.enabled)
                 {
                     comp.enabled = true;
-                    Debug.Log($"[EmberActivator] ✅ Enabled {comp.GetType().Name}");
+                    Debug.Log($"[EmberActivator] Enabled {comp.GetType().Name}");
                 }
             }
 
             if (promptUI != null && !promptUI.activeSelf)
             {
                 promptUI.SetActive(true);
-                Debug.Log("[EmberActivator] ✅ Prompt UI shown");
+                Debug.Log("[EmberActivator] Prompt UI shown");
             }
 
             // Optional: disable further checks

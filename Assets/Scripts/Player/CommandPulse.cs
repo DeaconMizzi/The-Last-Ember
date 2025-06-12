@@ -23,7 +23,6 @@ public class CommandPulse : MonoBehaviour
                 }
             }
 
-            // Optional: VFX/screen shake
         }
     }
 }

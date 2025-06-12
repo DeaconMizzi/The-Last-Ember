@@ -18,7 +18,7 @@ public class MapTransition : MonoBehaviour
     {
         confiner = FindObjectOfType<CinemachineConfiner>();
 
-        // Optional: auto-find the popup if not assigned in inspector
+        //auto-find the popup if not assigned in inspector
         if (areaNamePopup == null)
             areaNamePopup = FindObjectOfType<AreaNamePopup>();
     }

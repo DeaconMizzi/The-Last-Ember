@@ -14,7 +14,7 @@ public class EnemyWeaponHitbox : MonoBehaviour
 
         if (other.CompareTag("Player"))
         {
-            Debug.Log("[Hitbox] 🩸 DEALING DAMAGE via TriggerStay");
+            Debug.Log("[Hitbox] DEALING DAMAGE via TriggerStay");
             PlayerHealth player = other.GetComponent<PlayerHealth>();
             if (player != null)
             {
@@ -26,7 +26,7 @@ public class EnemyWeaponHitbox : MonoBehaviour
 
     public void ResetHit()
     {
-        Debug.Log("[Hitbox] ✅ ResetHit()");
+        Debug.Log("[Hitbox] ResetHit()");
         hasHit = false;
     }
 }

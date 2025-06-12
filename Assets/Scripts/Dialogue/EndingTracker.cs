@@ -11,7 +11,7 @@ public class EndingTracker : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // ✅ Keeps the tracker alive between scenes
+            DontDestroyOnLoad(gameObject);
         }
         else
         {

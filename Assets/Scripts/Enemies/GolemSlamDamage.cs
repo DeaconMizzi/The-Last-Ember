@@ -21,7 +21,7 @@ public class GolemSlamDamage : MonoBehaviour
             if (player != null)
             {
                 player.TakeDamage(damage);
-                // Optional: Call a stun method or apply slow
+                //Calls a stun method
                 PlayerMovement movement = player.GetComponent<PlayerMovement>();
                 if (movement != null)
                     movement.ApplyStun(stunDuration);

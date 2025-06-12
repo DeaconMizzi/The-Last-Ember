@@ -47,9 +47,7 @@ public class EmberManager : MonoBehaviour
         ApplyWorldChange(shift);
     }
 
-    /// <summary>
     /// Applies the ability granted by the ember to the player.
-    /// </summary>
     void ApplyAbility(EmberData.AbilityType ability)
     {
         if (player == null) return;
@@ -71,9 +69,7 @@ public class EmberManager : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// Applies environmental changes associated with the ember's world shift type.
-    /// </summary>
     void ApplyWorldChange(EmberData.WorldShiftType shift)
     {
         switch (shift)

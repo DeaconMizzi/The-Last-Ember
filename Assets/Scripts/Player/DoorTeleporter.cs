@@ -10,7 +10,7 @@ public class DoorTeleporter : MonoBehaviour
     public GameObject player;
 
     [Header("Optional: Map Transition")]
-    public MapTransition mapTransition; // Reference to your existing script
+    public MapTransition mapTransition;
 
     private void Update()
     {
@@ -22,7 +22,7 @@ public class DoorTeleporter : MonoBehaviour
             if (teleportDestination != null)
             {
                 player.transform.position = teleportDestination.position;
-                Debug.Log("[DoorTeleporter] ✅ Teleported player.");
+                Debug.Log("[DoorTeleporter] Teleported player.");
 
                 // Manually invoke MapTransition logic
                 if (mapTransition != null)

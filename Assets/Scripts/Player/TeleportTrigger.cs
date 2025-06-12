@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TeleportTrigger : MonoBehaviour
 {
-    public Transform teleportTarget; // Where to send the player
+    public Transform teleportTarget;
     public KeyCode interactKey = KeyCode.E;
 
     private bool playerInZone = false;

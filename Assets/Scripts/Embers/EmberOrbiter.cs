@@ -28,7 +28,7 @@ public class EmberOrbiter : MonoBehaviour
     {
         if (centerPoint == null)
         {
-            Debug.LogWarning($"❗ {gameObject.name} has no centerPoint assigned!");
+            Debug.LogWarning($" {gameObject.name} has no centerPoint assigned!");
             return;
         }
 

@@ -7,7 +7,7 @@ public class Burnable : MonoBehaviour
     public float burnDamagePerTick = 0.2f;
     public float burnDuration = 5f;
     public float burnTickRate = 1f;
-    public GameObject flameTrail; // Assign looping visual FX (optional)
+    public GameObject flameTrail;
 
     private bool isBurning = false;
     private Coroutine burnRoutine;
@@ -29,14 +29,14 @@ public class Burnable : MonoBehaviour
             flameTrail.SetActive(true);
 
         int ticks = 2;
-        float interval = burnDuration / ticks; // 5s / 2 = 2.5s
+        float interval = burnDuration / ticks;
 
         for (int i = 0; i < ticks; i++)
         {
             // Damage
             PlayerHealth health = GetComponent<PlayerHealth>();
             if (health != null)
-                health.TakeDamage(Mathf.CeilToInt(burnDamagePerTick)); // use 0.1 or round to 1
+                health.TakeDamage(Mathf.CeilToInt(burnDamagePerTick)); 
 
             // Hurt animation
             Animator anim = GetComponent<Animator>();

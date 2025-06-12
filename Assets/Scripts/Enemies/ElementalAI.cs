@@ -237,7 +237,7 @@ public class ElementalAI : MonoBehaviour, IStaggerable, IRetreatable
         // Stop AI behavior
         StopAllCoroutines();
 
-        // Play death animation (optional)
+        // Play death animation
         if (anim != null)
         {
             anim.ResetTrigger("Attack");

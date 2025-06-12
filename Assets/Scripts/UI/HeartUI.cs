@@ -21,7 +21,7 @@ public class HeartUI : MonoBehaviour
         while (hearts.Count < max)
         {
             GameObject heart = Instantiate(heartPrefab);
-            heart.transform.SetParent(heartContainer, false); // ⚠️ KEEP LOCAL SCALE
+            heart.transform.SetParent(heartContainer, false);
             heart.SetActive(true);
 
             Image heartImage = heart.GetComponent<Image>();
@@ -35,7 +35,6 @@ public class HeartUI : MonoBehaviour
             }
         }
 
-        // Trim any extras (not needed but included for robustness)
         while (hearts.Count > max)
         {
             Destroy(hearts[hearts.Count - 1].gameObject);

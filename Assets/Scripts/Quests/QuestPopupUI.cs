@@ -5,7 +5,7 @@ using TMPro;
 
 public class QuestPopupUI : MonoBehaviour
 {
-    public GameObject popupPanel;     // 🔁 The visual box
+    public GameObject popupPanel;
     public TMP_Text popupText;
     public float displayTime = 2f;
 

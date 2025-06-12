@@ -11,12 +11,12 @@ public class ElderDialogueTrigger : MonoBehaviour
     public string[] elderLines;
     public Sprite elderPortrait;
     public string questIDToGive = "COLLECT_EMBER";
-    public bool hideSpeakerName = false; // ✅ New toggle to optionally hide speaker name
-    public Animator fadeAnimator; // ✅ Optional fade animator
-    public string fadeOutTriggerName = "FadeOut"; // ✅ Trigger or state name to play
-    public GameObject fadePanelObject; // ✅ Panel or canvas to activate before fading
+    public bool hideSpeakerName = false; 
+    public Animator fadeAnimator; 
+    public string fadeOutTriggerName = "FadeOut"; 
+    public GameObject fadePanelObject; 
 
-    public bool goToMenuAfterDialogue = false; // ✅ NEW: Optional toggle for menu transition
+    public bool goToMenuAfterDialogue = false; 
 
     private bool triggered = false;
 

@@ -77,7 +77,7 @@ public class EnemyHealth : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
         }
 
-        // Disable colliders if you want (optional)
+        // Disable colliders
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 

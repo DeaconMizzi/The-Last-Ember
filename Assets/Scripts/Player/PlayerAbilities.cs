@@ -66,21 +66,21 @@ public class PlayerAbilities : MonoBehaviour
     {
         canBloomstep = true;
         if (bloomstepControlText != null) bloomstepControlText.SetActive(true);
-        Debug.Log("✅ Bloomstep unlocked!");
+        Debug.Log("Bloomstep unlocked!");
     }
 
     public void EnableFlameGuard()
     {
         hasFlameGuard = true;
         if (flameguardControlText != null) flameguardControlText.SetActive(true);
-        Debug.Log("✅ Flame Guard unlocked!");
+        Debug.Log("Flame Guard unlocked!");
     }
 
     public void EnableCommandPulse()
     {
         hasCommandPulse = true;
         if (commandpulseControlText != null) commandpulseControlText.SetActive(true);
-        Debug.Log("✅ Command Pulse unlocked!");
+        Debug.Log("Command Pulse unlocked!");
     }
 
     void HandleBloomstep()
@@ -104,7 +104,7 @@ public class PlayerAbilities : MonoBehaviour
             float dashDistance = 2.5f;
             float dashDuration = 0.2f;
 
-            Debug.Log("🌿 Bloomstep dash start!");
+            Debug.Log("Bloomstep dash start!");
             StartCoroutine(SmoothDash(dashDirection, dashDistance, dashDuration));
             StartCoroutine(BloomstepCooldown(1.5f));
         }
@@ -139,7 +139,7 @@ public class PlayerAbilities : MonoBehaviour
 
             if (hitCount > 0)
             {
-                Debug.Log($"🌿 Bloomstep stopped by {results[0].collider.name}");
+                Debug.Log($"Bloomstep stopped by {results[0].collider.name}");
                 break;
             }
 
@@ -194,7 +194,7 @@ public class PlayerAbilities : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q))
         {
             if (cameraShaker != null) cameraShaker.Shake(6f, 0.3f);
-            Debug.Log("⚡ Command Pulse Activated!");
+            Debug.Log("Command Pulse Activated!");
 
             if (pulseVFXPrefab != null) Instantiate(pulseVFXPrefab, transform.position, Quaternion.identity);
 
@@ -212,7 +212,7 @@ public class PlayerAbilities : MonoBehaviour
                 if (target != null)
                 {
                     target.Stun(stunDuration);
-                    Debug.Log($"⚡ Stunned: {hit.name}");
+                    Debug.Log($"Stunned: {hit.name}");
                 }
             }
 
@@ -239,7 +239,7 @@ public class PlayerAbilities : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            Debug.Log("🔥 Flame Guard activated!");
+            Debug.Log("Flame Guard activated!");
             StartCoroutine(ActivateFlameGuard());
         }
     }
@@ -275,7 +275,7 @@ public class PlayerAbilities : MonoBehaviour
 
         yield return new WaitForSeconds(flameGuardCooldown);
         flameGuardOnCooldown = false;
-        Debug.Log("🔥 Flame Guard ready again.");
+        Debug.Log("Flame Guard ready again.");
     }
 
     void OnDrawGizmosSelected()

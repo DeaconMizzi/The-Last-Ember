@@ -11,10 +11,10 @@ public class MapController_Manual : MonoBehaviour
     public GameObject mapParent;
     List<Image> mapImages;
 
-    // 🔶 Color used for the currently highlighted area (e.g., the player's location)
+    // Color used for the currently highlighted area (e.g., the player's location)
     public Color highlightColour = Color.yellow;
 
-    // 🔹 Color used for discovered areas that are not currently highlighted
+    // Color used for discovered areas that are not currently highlighted
     public Color dimmedColour = new Color(1f, 1f, 1f, 0.5f);
 
     public RectTransform playerIconTransform;
@@ -36,7 +36,6 @@ public class MapController_Manual : MonoBehaviour
         // Hide the player icon until an area is shown
         playerIconTransform.gameObject.SetActive(false);
 
-        // ✅ Immediately highlight the starting area (sets it to highlightColour)
         HighlightArea(startingAreaName);
     }
 
@@ -65,7 +64,6 @@ public class MapController_Manual : MonoBehaviour
             bool isDiscovered = discoveredAreas.Contains(area.name);
             area.enabled = isDiscovered;
 
-            // 🔧 Enable/disable children as well
             if (area.transform.childCount > 0)
             {
                 foreach (Transform child in area.transform)
@@ -74,14 +72,11 @@ public class MapController_Manual : MonoBehaviour
                 }
             }
 
-            // Optionally comment this if child Images shouldn't also show
-            // (e.g. keep text enabled but leave child images invisible)
         }
 
         Image currentArea = mapImages.Find(x => x.name == areaName);
         if (currentArea != null)
         {
-            // currentArea.color = highlightColour; // still commented out
 
             playerIconTransform.position = currentArea.GetComponent<RectTransform>().position;
             playerIconTransform.gameObject.SetActive(true);

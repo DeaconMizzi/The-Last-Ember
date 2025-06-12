@@ -91,7 +91,7 @@ public class PlayerHealth : MonoBehaviour
             Debug.Log("Setting Die trigger.");
             anim.ResetTrigger("Hurt"); // Prevent overlap
             anim.ResetTrigger("Attack"); // Reset attack
-            anim.SetTrigger("Die"); // 🔥 Set the die trigger
+            anim.SetTrigger("Die"); // Set the die trigger
         }
 
         PlayerMovement movement = GetComponent<PlayerMovement>();
@@ -107,7 +107,7 @@ public class PlayerHealth : MonoBehaviour
 
     IEnumerator DeathCleanup()
     {
-        // Wait for death animation (adjust as needed)
+        // Wait for death animation
         yield return new WaitForSeconds(1.5f);
 
         Destroy(gameObject);

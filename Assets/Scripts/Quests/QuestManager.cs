@@ -165,7 +165,7 @@ public class QuestManager : MonoBehaviour
                 if (obj.currentCount > obj.requiredCount)
                     obj.currentCount = obj.requiredCount;
 
-                Debug.Log($"✅ Updated {questID} objective {targetID} to {obj.currentCount}/{obj.requiredCount}");
+                Debug.Log($"Updated {questID} objective {targetID} to {obj.currentCount}/{obj.requiredCount}");
                 break;
             }
         }
@@ -185,7 +185,7 @@ public class QuestManager : MonoBehaviour
         {
             quest.isComplete = true;
             quest.hasCompletedQuest = true;
-            Debug.Log($"🎉 Quest {questID} completed!");
+            Debug.Log($"Quest {questID} completed!");
         }
 
         QuestLogUI.Instance?.UpdateQuestList();

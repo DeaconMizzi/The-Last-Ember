@@ -66,7 +66,6 @@ public class TalkPromptController : MonoBehaviour
             {
                 HidePrompt();
             }
-            // NEW: hide if in range but cutscene/dialogue is active
             else if (inRange && (GameStateController.IsCutscenePlaying || GameStateController.IsDialogueActive))
             {
                 HidePrompt();
@@ -112,7 +111,7 @@ public class TalkPromptController : MonoBehaviour
             questMarkerUI.SetActive(false);
         }
 
-        // 🔁 Update layout now that the marker state changed
+        // Update layout now that the marker state changed
         ShiftQuestMarker(wasInRange);
     }
 
@@ -154,7 +153,7 @@ public class TalkPromptController : MonoBehaviour
     {
         if (promptUI == null) return;
 
-        // 🔎 Quest marker may be null — treat as not having one
+        // Quest marker may be null — treat as not having one
         bool hasQuestMarker = questMarkerUI != null && questMarkerUI.activeSelf;
 
         if (playerInRange)
@@ -175,7 +174,7 @@ public class TalkPromptController : MonoBehaviour
             questMarkerBasePos = new Vector3(0f, npcHeight, 0f);
         }
 
-        // ✅ Apply immediately
+        // Apply immediately
         if (questMarkerUI != null)
             questMarkerUI.transform.localPosition = questMarkerBasePos;
 
@@ -185,7 +184,7 @@ public class TalkPromptController : MonoBehaviour
 
     void ShowPrompt()
     {
-        promptUI.SetActive(true); // or .enabled = true if it's an Image
+        promptUI.SetActive(true);
     }
 
     void HidePrompt()

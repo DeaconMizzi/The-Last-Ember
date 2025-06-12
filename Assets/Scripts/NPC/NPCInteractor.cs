@@ -5,7 +5,7 @@ using UnityEngine;
 public class NPCInteractor : MonoBehaviour
 {
     public float interactionRadius = 1.5f;
-    public LayerMask npcLayer; // Assign "NPC" layer in inspector
+    public LayerMask npcLayer;
 
     void Update()
     {

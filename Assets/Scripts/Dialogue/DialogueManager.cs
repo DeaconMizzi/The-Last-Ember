@@ -89,7 +89,7 @@ public class DialogueManager : MonoBehaviour
             }
             else if (npc.questCompleteNode != null)
             {
-                Debug.Log("✅ Showing Elder’s post-ember dialogue.");
+                Debug.Log(" Showing Elder’s post-ember dialogue.");
                 currentNode = npc.questCompleteNode;
             }
             else
@@ -163,7 +163,7 @@ public class DialogueManager : MonoBehaviour
             }
         }
 
-        // ✅ Toggle portrait background
+        //Toggle portrait background
         if (portraitBackground != null)
         {
             portraitBackground.SetActive(!isFallback);
@@ -472,7 +472,7 @@ public class DialogueManager : MonoBehaviour
     {
         dialogueText.text = "";
 
-        // 🔊 Start typing sound
+        // Start typing sound
         if (typingAudioSource != null && !typingAudioSource.isPlaying)
             typingAudioSource.Play();
 
@@ -482,7 +482,7 @@ public class DialogueManager : MonoBehaviour
             yield return new WaitForSeconds(typingSpeed);
         }
 
-        // 🔇 Stop sound after line is typed
+        // Stop sound after line is typed
         if (typingAudioSource != null && typingAudioSource.isPlaying)
             typingAudioSource.Stop();
 
@@ -699,7 +699,7 @@ public class DialogueManager : MonoBehaviour
 
         // 4. Apply Ember ability + world shift
         EmberManager.Instance.SetEmber(GameStateController.Instance.verdantEmberData, EmberData.WorldShiftType.Seeded);
-        Debug.Log("✅ Ember claimed. Bloomstep granted.");
+        Debug.Log("Ember claimed. Bloomstep granted.");
     }
     private IEnumerator PlayDominionEmberClaimSequence()
     {
@@ -740,7 +740,7 @@ public class DialogueManager : MonoBehaviour
 
         // 4. Grant command pulse
         EmberManager.Instance.SetEmber(GameStateController.Instance.dominionEmberData, EmberData.WorldShiftType.Default);
-        Debug.Log("✅ Dominion Ember claimed. Command Pulse granted.");
+        Debug.Log(" Dominion Ember claimed. Command Pulse granted.");
     }
 
     private IEnumerator DelayedQuestUIUpdate()
@@ -773,7 +773,7 @@ public class DialogueManager : MonoBehaviour
         yield return new WaitForSeconds(1.7f);
 
         EmberManager.Instance.SetEmber(GameStateController.Instance.wrathEmberData, EmberData.WorldShiftType.Default);
-        Debug.Log("✅ Wrath Ember claimed. FlameGuard granted.");
+        Debug.Log(" Wrath Ember claimed. FlameGuard granted.");
     }
 
 }

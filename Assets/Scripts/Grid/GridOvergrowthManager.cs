@@ -7,7 +7,7 @@ public class GridOvergrowthManager : MonoBehaviour
     [Header("Tilemap Roots")]
     public GameObject wildernessGrid;
     public GameObject overgrownGrid;
-    public GameObject natureParticles; // <-- this is now the parent "Particles" object
+    public GameObject natureParticles; 
 
     private bool isOvergrown = false;
 

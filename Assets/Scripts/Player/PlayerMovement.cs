@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
-    public bool canMove = true; // ← ADD THIS
+    public bool canMove = true;
 
     private Rigidbody2D rb;
     private Animator anim;

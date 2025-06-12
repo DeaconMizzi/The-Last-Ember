@@ -259,7 +259,7 @@ public class GolemAI : MonoBehaviour, IDominionScalable, IStunnable, IStaggerabl
         // Stop AI behavior
         StopAllCoroutines();
 
-        // Play death animation (optional)
+        // Play death animation
         if (anim != null)
         {
             anim.ResetTrigger("Attack");
